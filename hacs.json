@@ -1,0 +1,9 @@
+{
+  "name": "ecotrend-ista",
+  "domains": ["sensor"],
+  "country": "DE",
+  "render_readme": true,
+  "homeassistant": "2022.4.1",
+  "iot_class": ["Local Polling"],
+  "hacs": "1.24.3"
+}
