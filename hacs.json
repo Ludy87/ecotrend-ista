@@ -1,5 +1,5 @@
 {
-  "name": "ecotrend-ista",
+  "name": "ecotrend_ista",
   "domains": ["sensor"],
   "country": "DE",
   "render_readme": true,
