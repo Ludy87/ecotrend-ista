@@ -1,7 +1,6 @@
 """ ecotrend-ista """
 from __future__ import annotations
 
-import logging
 import voluptuous as vol
 
 from datetime import timedelta
@@ -26,8 +25,6 @@ from pyecotrend_ista import pyecotrend_ista as ista
 
 PLATFORMS = [SENSOR_DOMAIN]
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL_TIME)
-
-_LOGGER = logging.getLogger(__name__)
 
 CONTROLLER_SCHEMA = vol.Schema(
     {

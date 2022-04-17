@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import logging
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
-    SensorStateClass
+    SensorStateClass,
 )
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, CONF_SCAN_INTERVAL
+from homeassistant.const import ENERGY_KILO_WATT_HOUR
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -20,12 +20,10 @@ from homeassistant.util import Throttle
 
 from .const import (
     CONF_CONTROLLER,
-    CONF_EMAIL,
-    CONF_PASSWORD,
     CONF_TYPE_HEATING,
     CONF_TYPE_HEATWATER,
     CONF_UPDATE_FREQUENCY,
-    DOMAIN, 
+    DOMAIN,
 )
 
 from pyecotrend_ista import pyecotrend_ista as ista
@@ -56,11 +54,12 @@ async def async_setup_platform(
     hass: HomeAssistant,
     conf: ConfigType,
     add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     if discovery_info is None:
         return
     controller: ista.PyEcotrendIsta = hass.data[DOMAIN][discovery_info[CONF_CONTROLLER]]
+    _LOGGER.debug(f"PyEcotrendIsta version: {controller.getVersion()}")
     consums: list = await controller.consum_small()
     updateTime = hass.data[CONF_UPDATE_FREQUENCY][discovery_info[CONF_CONTROLLER]]
     sc: str = controller.getSupportCode()
@@ -112,4 +111,8 @@ class EcoSensor(SensorEntity, RestoreEntity):
             if "type" in consum:
                 if self.entity_description.key in consum["type"]:
                     self._attr_native_value = consum["valuekwh"]
-                    _LOGGER.debug("Updating sensor: %s | Verbrauch: %s", self._attr_name, str(self._attr_native_value))
+                    _LOGGER.debug(
+                        "Updating sensor: %s | Verbrauch: %s",
+                        self._attr_name,
+                        str(self._attr_native_value),
+                    )
