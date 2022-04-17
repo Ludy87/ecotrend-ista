@@ -12,4 +12,4 @@ jobs:
       - name: Bandit Check (Python security linter)
         uses: jpetrucciani/bandit-check@master
         with:
-          path: '/custom_components/ecotrend_ista/'
+          path: './custom_components/ecotrend_ista/'
