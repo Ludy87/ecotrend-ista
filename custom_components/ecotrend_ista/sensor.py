@@ -2,18 +2,21 @@ from __future__ import annotations
 
 import logging
 
+from datetime import datetime, timedelta
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass
 )
-from homeassistant.const import ENERGY_KILO_WATT_HOUR
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import Throttle
 
 from .const import (
     CONF_CONTROLLER,
@@ -21,6 +24,7 @@ from .const import (
     CONF_PASSWORD,
     CONF_TYPE_HEATING,
     CONF_TYPE_HEATWATER,
+    CONF_UPDATE_FREQUENCY,
     DOMAIN, 
 )
 
@@ -58,6 +62,7 @@ async def async_setup_platform(
         return
     controller: ista.PyEcotrendIsta = hass.data[DOMAIN][discovery_info[CONF_CONTROLLER]]
     consums: list = await controller.consum_small()
+    updateTime = hass.data[CONF_UPDATE_FREQUENCY][discovery_info[CONF_CONTROLLER]]
     sc: str = controller.getSupportCode()
 
     entities = []
@@ -66,7 +71,7 @@ async def async_setup_platform(
         for consum in consums:
             if "type" in consum:
                 if description.key in consum["type"]:
-                    entities.append(EcoSensor(description, consum, sc, controller))
+                    entities.append(EcoSensor(description, consum, sc, controller, updateTime))
 
     add_entities(entities, True)
 
@@ -78,6 +83,7 @@ class EcoSensor(SensorEntity, RestoreEntity):
         consum: list,
         supportCode: str,
         controller: ista.PyEcotrendIsta,
+        updateTime: timedelta,
     ) -> None:
         self._attr_name = f"{description.name} {supportCode}".title()
         self._attr_unique_id = f"{DOMAIN}.{description.key}_{supportCode}"
@@ -87,15 +93,9 @@ class EcoSensor(SensorEntity, RestoreEntity):
         self._consum = consum
         self._attr_native_value = self._consum["valuekwh"]
         self._supportCode = supportCode
-        _LOGGER.debug(f"set Sensor: {self.entity_description.key}")
-
-    async def async_update(self) -> None:
-        consums: list = await self._controller.consum_small()
-        for consum in consums:
-            if "type" in consum:
-                if self.entity_description.key in consum["type"]:
-                    self._attr_native_value = consum["valuekwh"]
-                    _LOGGER.debug("Updating sensor: %s | Verbrauch: %s", self._attr_name, str(self._attr_native_value))
+        self.scan_interval = updateTime
+        self.async_update = Throttle(self.scan_interval)(self._async_update)
+        _LOGGER.debug(f"set Sensor: {self.entity_description.key} | update interval: {updateTime}")
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -105,3 +105,11 @@ class EcoSensor(SensorEntity, RestoreEntity):
             manufacturer="ista",
             name=self._attr_name,
         )
+
+    async def _async_update(self) -> None:
+        consums: list = await self._controller.consum_small()
+        for consum in consums:
+            if "type" in consum:
+                if self.entity_description.key in consum["type"]:
+                    self._attr_native_value = consum["valuekwh"]
+                    _LOGGER.debug("Updating sensor: %s | Verbrauch: %s", self._attr_name, str(self._attr_native_value))

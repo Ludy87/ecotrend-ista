@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import logging
-
 import voluptuous as vol
+
+from datetime import timedelta
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_SCAN_INTERVAL
@@ -16,13 +17,15 @@ from .const import (
     CONF_CONTROLLER,
     CONF_EMAIL,
     CONF_PASSWORD,
-    DEFAULT_SCAN_INTERVAL,
+    CONF_UPDATE_FREQUENCY,
+    DEFAULT_SCAN_INTERVAL_TIME,
     DOMAIN,
 )
 
 from pyecotrend_ista import pyecotrend_ista as ista
 
 PLATFORMS = [SENSOR_DOMAIN]
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL_TIME)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,11 +46,11 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     hass.data[CONF_EMAIL] = []
     hass.data[CONF_PASSWORD] = []
+    hass.data[CONF_UPDATE_FREQUENCY] = []
     hass.data[DOMAIN] = []
     success = False
     for controller_config in config[DOMAIN]:
         success = success or await _setup_controller(hass, controller_config, config)
-
     return success
 
 
@@ -59,6 +62,7 @@ async def _setup_controller(hass: HomeAssistant, controller_config, config: Conf
     position = len(hass.data[DOMAIN])
     hass.data[CONF_EMAIL].append(email)
     hass.data[CONF_PASSWORD].append(password)
+    hass.data[CONF_UPDATE_FREQUENCY].append(controller_config[CONF_SCAN_INTERVAL])
     hass.data[DOMAIN].append(eco)
 
     for platform in PLATFORMS:
