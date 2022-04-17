@@ -12,5 +12,5 @@ jobs:
       - name: Bandit Check (Python security linter)
         uses: jpetrucciani/bandit-check@master
         with:
-          skips: 'B105'
+          bandit_flags: '--skips=B105'
           path: './custom_components/ecotrend_ista/'
