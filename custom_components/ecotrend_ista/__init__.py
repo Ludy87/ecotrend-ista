@@ -40,7 +40,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[CONF_EMAIL] = []
     hass.data[CONF_PASSWORD] = []
     hass.data[CONF_UPDATE_FREQUENCY] = []

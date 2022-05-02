@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 
 from datetime import timedelta
+from typing import Any, List
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -60,11 +61,11 @@ async def async_setup_platform(
         return
     controller: ista.PyEcotrendIsta = hass.data[DOMAIN][discovery_info[CONF_CONTROLLER]]
     _LOGGER.debug(f"PyEcotrendIsta version: {controller.getVersion()}")
-    consums: list = await controller.consum_small()
+    consums: List[Any] = await controller.consum_small()
     updateTime = hass.data[CONF_UPDATE_FREQUENCY][discovery_info[CONF_CONTROLLER]]
     sc: str = controller.getSupportCode()
 
-    entities = []
+    entities: List[EcoSensor] = []
 
     for description in SENSOR_TYPES:
         for consum in consums:
@@ -79,7 +80,7 @@ class EcoSensor(SensorEntity, RestoreEntity):
     def __init__(
         self,
         description: SensorEntityDescription,
-        consum: list,
+        consum: List[Any],
         supportCode: str,
         controller: ista.PyEcotrendIsta,
         updateTime: timedelta,
@@ -106,7 +107,7 @@ class EcoSensor(SensorEntity, RestoreEntity):
         )
 
     async def _async_update(self) -> None:
-        consums: list = await self._controller.consum_small()
+        consums: List[Any] = await self._controller.consum_small()
         for consum in consums:
             if "type" in consum:
                 if self.entity_description.key in consum["type"]:
