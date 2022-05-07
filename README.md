@@ -32,11 +32,6 @@ Add entry to your `configuration.yaml`
 ecotrend_ista:
   email: "email@local"
   password: "password"
-  unit: "kwh"  # optional
-  year:  # optional
-    - 2021
-  yearmonth:  # optional
-    - "2022.5"
 ```
 ### optional
 ```yaml
