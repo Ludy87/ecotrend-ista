@@ -46,3 +46,6 @@
 - name: "Bug: Fix!"
   description: Fix Bug
   color: d73a4a
+- name: "wait"
+  description: in examination
+  color: 12CE3B
