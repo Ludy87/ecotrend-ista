@@ -26,12 +26,26 @@ Copy the ecotrend_ista [last Releae](https://github.com/Ludy87/ecotrend-ista/rel
 ---
 ## Basis Configuration
 
-1. Add entry to your `configuration.yaml`
+Add entry to your `configuration.yaml`
 
 ```yaml
 ecotrend_ista:
   email: "email@local"
   password: "password"
+  unit: "kwh"  # optional
+  year:  # optional
+    - 2021
+  yearmonth:  # optional
+    - "2022.5"
+```
+### optional
+```yaml
+  unit: "kwh"
+  year:
+    - 2021
+  yearmonth:
+    - "2022.5"
+  scan_interval: 39600
 ```
 ---
 # Debug
