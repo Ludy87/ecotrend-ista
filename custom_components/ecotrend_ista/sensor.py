@@ -26,6 +26,8 @@ from .const import (
     CONF_UNIT,
     CONF_TYPE_HEATING,
     CONF_TYPE_HEATWATER,
+    CONF_UNIT_HEATING,
+    CONF_UNIT_WARMWATER,
     CONF_UPDATE_FREQUENCY,
     CONF_YEAR,
     CONF_YEARMONTH,
@@ -44,6 +46,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:water",
     ),
     SensorEntityDescription(
         key=CONF_TYPE_HEATING,
@@ -52,6 +55,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:radiator",
     ),
 )
 
@@ -67,8 +71,10 @@ async def async_setup_platform(
     controller: ista.PyEcotrendIsta = hass.data[DOMAIN][discovery_info[CONF_CONTROLLER]]
     _LOGGER.debug(f"PyEcotrendIsta version: {controller.getVersion()}")
     unit = hass.data[CONF_UNIT][discovery_info[CONF_CONTROLLER]]
+    unitheating = hass.data[CONF_UNIT_HEATING][discovery_info[CONF_CONTROLLER]]
+    unitwarmwater = hass.data[CONF_UNIT_WARMWATER][discovery_info[CONF_CONTROLLER]]
     updateTime = hass.data[CONF_UPDATE_FREQUENCY][discovery_info[CONF_CONTROLLER]]
-    year: List[str] = hass.data[CONF_YEAR][discovery_info[CONF_CONTROLLER]]
+    year: List[int] = hass.data[CONF_YEAR][discovery_info[CONF_CONTROLLER]]
     yearmonth: List[str] = hass.data[CONF_YEARMONTH][discovery_info[CONF_CONTROLLER]]
 
     device_id: List[str] = []
@@ -82,7 +88,15 @@ async def async_setup_platform(
     for description in SENSOR_TYPES:
         if consums:
             for consum in consums:
-                if description.key in consum["type"]:
+                if description.key == consum.get("type", ""):
+                    if unitheating != "":
+                        unit_type = CONF_UNIT_HEATING.split("_")[1]
+                        if unit_type == description.key:
+                            unit = unitheating
+                    if unitwarmwater != "":
+                        unit_type = CONF_UNIT_WARMWATER.split("_")[1]
+                        if unit_type == description.key:
+                            unit = unitwarmwater
                     if not device_id or consum.get("entity_id") not in device_id:
                         entities.append(EcoSensor(controller, description, consum, updateTime, unit))
                         device_id.append(consum.get("entity_id", ""))
@@ -99,20 +113,39 @@ async def async_setup_platform(
                     "{}_{}_{}_{}".format(description.key, yyyy, m, sc)
                 )  # warmwasser_yyyy_m_xxxxxxxxx
                 if consumsyearmonth:
-                    if not device_id or consumsyearmonth.get("entity_id") not in device_id:
-                        entities.append(
-                            EcoYearMonthSensor(controller, description, consumsyearmonth, updateTime, yyyy, m, unit)
-                        )
-                        device_id.append(consumsyearmonth.get("entity_id", ""))
+                    if description.key == consumsyearmonth.get("type", ""):
+                        if unitheating != "":
+                            unit_type = CONF_UNIT_HEATING.split("_")[1]
+                            if unit_type == description.key:
+                                unit = unitheating
+                        if unitwarmwater != "":
+                            unit_type = CONF_UNIT_WARMWATER.split("_")[1]
+                            if unit_type == description.key:
+                                unit = unitwarmwater
+                        if not device_id or consumsyearmonth.get("entity_id", "") not in device_id:
+                            entities.append(
+                                EcoYearMonthSensor(controller, description, consumsyearmonth, updateTime, yyyy, m, unit)
+                            )
+                            device_id.append(consumsyearmonth.get("entity_id", ""))
             _LOGGER.debug("load yearmonth")
         if year:
             for y in year:
                 consumsyear: List[Dict[str, Any]] = await controller.getConsumsByYear(y)
                 if consumsyear:
                     for consum in consumsyear:
-                        if not device_id or consum.get("entity_id") not in device_id:
-                            entities.append(EcoYearSensor(controller, description, consum, updateTime, y, unit))
-                            device_id.append(consum.get("entity_id", ""))
+                        if consum:
+                            if description.key == consum.get("type", ""):
+                                if unitheating != "":
+                                    unit_type = CONF_UNIT_HEATING.split("_")[1]
+                                    if unit_type == description.key:
+                                        unit = unitheating
+                                if unitwarmwater != "":
+                                    unit_type = CONF_UNIT_WARMWATER.split("_")[1]
+                                    if unit_type == description.key:
+                                        unit = unitwarmwater
+                                if not device_id or consum.get("entity_id") not in device_id:
+                                    entities.append(EcoYearSensor(controller, description, consum, updateTime, y, unit))
+                                    device_id.append(consum.get("entity_id", ""))
             _LOGGER.debug("load year")
 
     add_entities(entities, True)
@@ -137,8 +170,8 @@ class EcoYearSensor(EcoEntity, SensorEntity, RestoreEntity):
 
     async def _async_update(self) -> None:
         consum: Dict[str, Any] = await self._controller.getConsumById(self._name)  # warmwasser_yyyy_m_xxxxxxxxx
-        if self.entity_description.key == consum.get("type"):
-            self._attr_native_value = consum.get("valuekwh")
+        if self.entity_description.key == consum.get("type", ""):
+            self._attr_native_value = float(str(consum.get("value{}".format(self._unit), "-1")).replace(",", "."))
             _LOGGER.debug(
                 "Updating EcoYearSensor: %s | Verbrauch: %s",
                 self._name,
@@ -157,6 +190,7 @@ class EcoYearMonthSensor(EcoEntity, SensorEntity, RestoreEntity):
         month: int,
         unit: str,
     ) -> None:
+        self._attr_icon = description.icon
         super().__init__(controller, description, consum, unit)
         self.scan_interval = updateTime
         self.async_update = Throttle(self.scan_interval)(self._async_update)
@@ -167,8 +201,8 @@ class EcoYearMonthSensor(EcoEntity, SensorEntity, RestoreEntity):
 
     async def _async_update(self) -> None:
         consum: Dict[str, Any] = await self._controller.getConsumById(self._name)  # warmwasser_yyyy_m_xxxxxxxxx
-        if self.entity_description.key == consum.get("type"):
-            self._attr_native_value = consum.get("valuekwh")
+        if self.entity_description.key == consum.get("type", ""):
+            self._attr_native_value = float(str(consum.get("value{}".format(self._unit), "-1")).replace(",", "."))
             _LOGGER.debug(
                 "Updating EcoYearMonthSensor: %s | Verbrauch: %s",
                 self._name,
@@ -185,6 +219,7 @@ class EcoSensor(EcoEntity, SensorEntity, RestoreEntity):
         updateTime: timedelta,
         unit: str,
     ) -> None:
+        self._attr_icon = description.icon
         super().__init__(controller, description, consum, unit)
         self.scan_interval = updateTime
         self.async_update = Throttle(self.scan_interval)(self._async_update)
@@ -192,8 +227,8 @@ class EcoSensor(EcoEntity, SensorEntity, RestoreEntity):
 
     async def _async_update(self) -> None:
         consum: Dict[str, Any] = await self._controller.getConsumById(self._name, True)  # warmwasser_xxxxxxxxx
-        if self.entity_description.key == consum.get("type"):
-            self._attr_native_value = consum.get("valuekwh")
+        if self.entity_description.key == consum.get("type", ""):
+            self._attr_native_value = float(str(consum.get("value{}".format(self._unit), "-1")).replace(",", "."))
             _LOGGER.debug(
                 "Updating EcoSensor: %s | Verbrauch: %s",
                 self._name,

@@ -26,7 +26,10 @@ class EcoEntity(SensorEntity, RestoreEntity):
         self._supportCode = controller.getSupportCode()
         self.entity_description = description
         self._consum = consum
-        self._name = "{}".format(self._consum.get("entity_id"))
+        try:
+            self._name = "{}".format(self._consum.get("entity_id"))
+        except:
+            raise Exception("no entity_id, check your settings or ecotrend-isata has no data")
         self._attr_unique_id = self._name
         self._attr_last_reset = datetime.datetime.now()
         self._unit = unit
@@ -44,7 +47,7 @@ class EcoEntity(SensorEntity, RestoreEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return float(str(self._consum.get("value{}".format(self._unit))).replace(",", "."))
+        return float(str(self._consum.get("value{}".format(self._unit), "-1")).replace(",", "."))
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -62,8 +65,8 @@ class EcoEntity(SensorEntity, RestoreEntity):
         is lowercase snake_case.
         """
         return {
-            "unit": self._consum.get("unit"),
-            "value": float(str(self._consum.get("value")).replace(",", ".")),
-            "unitkwh": self._consum.get("unitkwh"),
-            "valuekwh": float(str(self._consum.get("valuekwh")).replace(",", ".")),
+            "unit": self._consum.get("unit", ""),
+            "value": float(str(self._consum.get("value", "-1")).replace(",", ".")),
+            "unitkwh": self._consum.get("unitkwh", ""),
+            "valuekwh": float(str(self._consum.get("valuekwh", "-1")).replace(",", ".")),
         }

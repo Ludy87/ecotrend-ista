@@ -36,10 +36,16 @@ ecotrend_ista:
 ### optional
 ```yaml
   unit: "kwh"
+  unit_heating: "kwh"
+  unit_warmwater: "kwh"
+```
+```yaml
   year:
-    - 2021
+    - 2022
   yearmonth:
-    - "2022.5"
+    - "2022.4"
+```
+```yaml
   scan_interval: 39600
 ```
 ---
