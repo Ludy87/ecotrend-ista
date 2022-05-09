@@ -1,4 +1,5 @@
 # ecotrend-ista
+
 [ecotrend-ista](https://ecotrend.ista.de/) Home Assistant Integration
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge&logo=appveyor)](https://github.com/custom-components/hacs)
@@ -16,14 +17,15 @@
 
 Copy the ecotrend_ista [last Releae](https://github.com/Ludy87/ecotrend-ista/releases) folder and all of its contents into your Home Assistant's custom_components folder. This folder is usually inside your /config folder. If you are running Hass.io, use SAMBA to copy the folder over. If you are running Home Assistant Supervised, the custom_components folder might be located at /usr/share/hassio/homeassistant. You may need to create the custom_components folder and then copy the localtuya folder and all of its contents into it Alternatively, you can install localtuya through HACS by adding this repository.
 
-### INSTALLATION mit HACS 🚧 in progress 🚧 
+### INSTALLATION mit HACS 🚧 in progress 🚧
 
 1. Ensure that [HACS](https://hacs.xyz/) is installed.
-2. Search for and install the "__ecotrend ista Integration__" integration. [![GitHub release (latest by date)](https://img.shields.io/github/v/release/Ludy87/ecotrend-ista?style=for-the-badge&logo=appveyor)](https://github.com/Ludy87/ecotrend-ista/releases)
+2. Search for and install the "**ecotrend ista Integration**" integration. [![GitHub release (latest by date)](https://img.shields.io/github/v/release/Ludy87/ecotrend-ista?style=for-the-badge&logo=appveyor)](https://github.com/Ludy87/ecotrend-ista/releases)
 3. [Add a `ecotrend_ista` entry to your `configuration.yaml`.](https://github.com/Ludy87/ecotrend-ista#basis-configuration)
 4. Restart Home Assistant.
 
 ---
+
 ## Basis Configuration
 
 Add entry to your `configuration.yaml`
@@ -33,22 +35,49 @@ ecotrend_ista:
   email: "email@local"
   password: "password"
 ```
+
 ### optional
+
 ```yaml
-  unit: "kwh"
-  unit_heating: "kwh"
-  unit_warmwater: "kwh"
+unit: "kwh"
+unit_heating: "kwh"
+unit_warmwater: "kwh"
 ```
+
 ```yaml
-  year:
-    - 2022
-  yearmonth:
-    - "2022.4"
+year:
+  - 2022
+yearmonth:
+  - "2022.4"
 ```
+
 ```yaml
-  scan_interval: 39600
+scan_interval: 39600
 ```
+
 ---
+
+## Template
+
+```yaml
+- template:
+    - sensor:
+        - name: ECO Heizung Einheiten
+          unit_of_measurement: "Einheiten"
+          state: "{{ state_attr('sensor.heating_XXXXXXXXX', 'value') }}"
+        - name: ECO Heizung kwh
+          unit_of_measurement: "kwh"
+          state: "{{ state_attr('sensor.heating_XXXXXXXXX', 'valuekwh') }}"
+        - name: ECO Wasserverbrauch m³
+          unit_of_measurement: "m³"
+          state: "{{ state_attr('sensor.warmwater_XXXXXXXXX', 'value') }}"
+        - name: ECO Wasserverbrauch kwh
+          unit_of_measurement: "kwh"
+          state: "{{ state_attr('sensor.warmwater_XXXXXXXXX', 'valuekwh') }}"
+```
+
+![](./image/template.png)
+
 # Debug
 
 ```yaml
@@ -56,4 +85,5 @@ logger:
   logs:
     custom_components.ecotrend_ista: debug
 ```
+
 ---
