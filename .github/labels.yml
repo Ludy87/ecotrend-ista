@@ -49,3 +49,6 @@
 - name: "wait"
   description: in examination
   color: 12CE3B
+- name: "Beta"
+  description: Beta Version Release
+  color: d73a4a
