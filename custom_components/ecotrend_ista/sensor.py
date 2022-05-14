@@ -158,7 +158,7 @@ class EcoYearSensor(EcoEntity, SensorEntity, RestoreEntity):
         description: SensorEntityDescription,
         consum: Dict[str, Any],
         updateTime: timedelta,
-        year: str,
+        year: int,
         unit: str,
     ) -> None:
         super().__init__(controller, description, consum, unit)
@@ -171,7 +171,11 @@ class EcoYearSensor(EcoEntity, SensorEntity, RestoreEntity):
     async def _async_update(self) -> None:
         consum: Dict[str, Any] = await self._controller.getConsumById(self._name)  # warmwasser_yyyy_m_xxxxxxxxx
         if self.entity_description.key == consum.get("type", ""):
-            self._attr_native_value = float(str(consum.get("value{}".format(self._unit), "-1")).replace(",", "."))
+            try:
+                self._attr_native_value = float(str(consum.get("value{}".format(self._unit), "-1")).replace(",", "."))
+            except ValueError as e:
+                _LOGGER.error(e)
+                _LOGGER.error(await self._controller.getTypes())
             _LOGGER.debug(
                 "Updating EcoYearSensor: %s | Verbrauch: %s",
                 self._name,
@@ -202,7 +206,11 @@ class EcoYearMonthSensor(EcoEntity, SensorEntity, RestoreEntity):
     async def _async_update(self) -> None:
         consum: Dict[str, Any] = await self._controller.getConsumById(self._name)  # warmwasser_yyyy_m_xxxxxxxxx
         if self.entity_description.key == consum.get("type", ""):
-            self._attr_native_value = float(str(consum.get("value{}".format(self._unit), "-1")).replace(",", "."))
+            try:
+                self._attr_native_value = float(str(consum.get("value{}".format(self._unit), "-1")).replace(",", "."))
+            except ValueError as e:
+                _LOGGER.error(e)
+                _LOGGER.error(await self._controller.getTypes())
             _LOGGER.debug(
                 "Updating EcoYearMonthSensor: %s | Verbrauch: %s",
                 self._name,
@@ -228,7 +236,11 @@ class EcoSensor(EcoEntity, SensorEntity, RestoreEntity):
     async def _async_update(self) -> None:
         consum: Dict[str, Any] = await self._controller.getConsumById(self._name, True)  # warmwasser_xxxxxxxxx
         if self.entity_description.key == consum.get("type", ""):
-            self._attr_native_value = float(str(consum.get("value{}".format(self._unit), "-1")).replace(",", "."))
+            try:
+                self._attr_native_value = float(str(consum.get("value{}".format(self._unit), "-1")).replace(",", "."))
+            except ValueError as e:
+                _LOGGER.error(e)
+                _LOGGER.error(await self._controller.getTypes())
             _LOGGER.debug(
                 "Updating EcoSensor: %s | Verbrauch: %s",
                 self._name,
