@@ -23,9 +23,9 @@ from homeassistant.util import Throttle
 
 from .const import (
     CONF_CONTROLLER,
-    CONF_UNIT,
     CONF_TYPE_HEATING,
     CONF_TYPE_HEATWATER,
+    CONF_UNIT,
     CONF_UNIT_HEATING,
     CONF_UNIT_WARMWATER,
     CONF_UPDATE_FREQUENCY,
@@ -85,6 +85,9 @@ async def async_setup_platform(
 
     entities: List[Any] = []
 
+    support_types: List[str] = await controller.getTypes()
+    _LOGGER.debug(f"PyEcotrendIsta supported types: {support_types}")
+
     for description in SENSOR_TYPES:
         if consums:
             for consum in consums:
@@ -97,7 +100,7 @@ async def async_setup_platform(
                         unit_type = CONF_UNIT_WARMWATER.split("_")[1]
                         if unit_type == description.key:
                             unit = unitwarmwater
-                    if not device_id or consum.get("entity_id") not in device_id:
+                    if not device_id or consum.get("entity_id", "") not in device_id:
                         entities.append(EcoSensor(controller, description, consum, updateTime, unit))
                         device_id.append(consum.get("entity_id", ""))
         if yearmonth:
@@ -143,7 +146,7 @@ async def async_setup_platform(
                                     unit_type = CONF_UNIT_WARMWATER.split("_")[1]
                                     if unit_type == description.key:
                                         unit = unitwarmwater
-                                if not device_id or consum.get("entity_id") not in device_id:
+                                if not device_id or consum.get("entity_id", "") not in device_id:
                                     entities.append(EcoYearSensor(controller, description, consum, updateTime, y, unit))
                                     device_id.append(consum.get("entity_id", ""))
             _LOGGER.debug("load year")
@@ -171,10 +174,11 @@ class EcoYearSensor(EcoEntity, SensorEntity, RestoreEntity):
     async def _async_update(self) -> None:
         consum: Dict[str, Any] = await self._controller.getConsumById(self._name)  # warmwasser_yyyy_m_xxxxxxxxx
         if self.entity_description.key == consum.get("type", ""):
-            try:
-                self._attr_native_value = float(str(consum.get("value{}".format(self._unit), "-1")).replace(",", "."))
-            except ValueError as e:
-                _LOGGER.error(e)
+            _value = consum.get("value{}".format(self._unit), "-1")
+            _value = None if _value == "None" else _value
+            if _value:
+                self._attr_native_value = float(str(_value).replace(",", "."))
+            else:
                 _LOGGER.error(await self._controller.getTypes())
             _LOGGER.debug(
                 "Updating EcoYearSensor: %s | Verbrauch: %s",
@@ -206,10 +210,11 @@ class EcoYearMonthSensor(EcoEntity, SensorEntity, RestoreEntity):
     async def _async_update(self) -> None:
         consum: Dict[str, Any] = await self._controller.getConsumById(self._name)  # warmwasser_yyyy_m_xxxxxxxxx
         if self.entity_description.key == consum.get("type", ""):
-            try:
-                self._attr_native_value = float(str(consum.get("value{}".format(self._unit), "-1")).replace(",", "."))
-            except ValueError as e:
-                _LOGGER.error(e)
+            _value = consum.get("value{}".format(self._unit), "-1")
+            _value = None if _value == "None" else _value
+            if _value:
+                self._attr_native_value = float(str(_value).replace(",", "."))
+            else:
                 _LOGGER.error(await self._controller.getTypes())
             _LOGGER.debug(
                 "Updating EcoYearMonthSensor: %s | Verbrauch: %s",
@@ -236,10 +241,11 @@ class EcoSensor(EcoEntity, SensorEntity, RestoreEntity):
     async def _async_update(self) -> None:
         consum: Dict[str, Any] = await self._controller.getConsumById(self._name, True)  # warmwasser_xxxxxxxxx
         if self.entity_description.key == consum.get("type", ""):
-            try:
-                self._attr_native_value = float(str(consum.get("value{}".format(self._unit), "-1")).replace(",", "."))
-            except ValueError as e:
-                _LOGGER.error(e)
+            _value = consum.get("value{}".format(self._unit), "-1")
+            _value = None if _value == "None" else _value
+            if _value:
+                self._attr_native_value = float(str(_value).replace(",", "."))
+            else:
                 _LOGGER.error(await self._controller.getTypes())
             _LOGGER.debug(
                 "Updating EcoSensor: %s | Verbrauch: %s",

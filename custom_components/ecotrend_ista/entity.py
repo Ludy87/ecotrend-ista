@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import datetime
 
-from typing import Any, Dict, Mapping
+from typing import Any, Dict, List, Mapping
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.helpers.entity import DeviceInfo
@@ -20,7 +20,11 @@ _LOGGER = logging.getLogger(__name__)
 
 class EcoEntity(SensorEntity, RestoreEntity):
     def __init__(
-        self, controller: ista.PyEcotrendIsta, description: SensorEntityDescription, consum: Dict[str, Any], unit: str
+        self,
+        controller: ista.PyEcotrendIsta,
+        description: SensorEntityDescription,
+        consum: Dict[str, Any],
+        unit: str,
     ) -> None:
         self._controller = controller
         self._supportCode = controller.getSupportCode()
@@ -47,7 +51,11 @@ class EcoEntity(SensorEntity, RestoreEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return float(str(self._consum.get("value{}".format(self._unit), "-1")).replace(",", "."))
+        _value = self._consum.get("value{}".format(self._unit), "-1")
+        _value = None if _value == "None" else _value
+        if _value:
+            return float(str(_value).replace(",", "."))
+        return _value
 
     @property
     def device_info(self) -> DeviceInfo:
