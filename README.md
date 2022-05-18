@@ -39,9 +39,8 @@ ecotrend_ista:
 ### optional
 
 ```yaml
-unit: "kwh"
-unit_heating: "kwh"
-unit_warmwater: "kwh"
+unit_heating: "Einheiten"  # default kwh
+unit_warmwater: "m³"  # default kwh
 ```
 
 ```yaml
@@ -55,6 +54,13 @@ yearmonth:
 scan_interval: 39600
 ```
 
+### deprecated v1.0.7-beta-3
+
+```yaml
+unit: "kwh"
+```
+
+
 ---
 
 ## Template
@@ -65,15 +71,35 @@ scan_interval: 39600
         - name: ECO Heizung Einheiten
           unit_of_measurement: "Einheiten"
           state: "{{ state_attr('sensor.heating_XXXXXXXXX', 'value') }}"
+          state_class: total
         - name: ECO Heizung kwh
           unit_of_measurement: "kwh"
           state: "{{ state_attr('sensor.heating_XXXXXXXXX', 'valuekwh') }}"
+          state_class: total
         - name: ECO Wasserverbrauch m³
           unit_of_measurement: "m³"
           state: "{{ state_attr('sensor.warmwater_XXXXXXXXX', 'value') }}"
+          state_class: total
         - name: ECO Wasserverbrauch kwh
           unit_of_measurement: "kwh"
           state: "{{ state_attr('sensor.warmwater_XXXXXXXXX', 'valuekwh') }}"
+          state_class: total
+        - name: ECO Heizung Einheiten 03/2022
+          unit_of_measurement: "Einheiten"
+          state: "{{ state_attr('sensor.heating_2022_3_XXXXXXXXX', 'value') }}"
+          state_class: total
+        - name: ECO Heizung kwh 03/2022
+          unit_of_measurement: "kwh"
+          state: "{{ state_attr('sensor.heating_2022_3_XXXXXXXXX', 'valuekwh') }}"
+          state_class: total
+        - name: ECO Wasserverbrauch m³ 03/2022
+          unit_of_measurement: "m³"
+          state: "{{ state_attr('sensor.warmwater_2022_3_XXXXXXXXX', 'value') }}"
+          state_class: total
+        - name: ECO Wasserverbrauch kwh 03/2022
+          unit_of_measurement: "kwh"
+          state: "{{ state_attr('sensor.warmwater_2022_3_XXXXXXXXX', 'valuekwh') }}"
+          state_class: total
 ```
 
 ![](./image/template.png)
