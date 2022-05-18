@@ -8,7 +8,6 @@ from typing import Any, Dict, List
 from .entity import EcoEntity
 
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -25,13 +24,14 @@ from .const import (
     CONF_CONTROLLER,
     CONF_TYPE_HEATING,
     CONF_TYPE_HEATWATER,
-    CONF_UNIT,
     CONF_UNIT_HEATING,
     CONF_UNIT_WARMWATER,
     CONF_UPDATE_FREQUENCY,
     CONF_YEAR,
     CONF_YEARMONTH,
     DOMAIN,
+    UNIT_SUPPORT_HEATING,
+    UNIT_SUPPORT_WARMWATER,
 )
 
 from pyecotrend_ista import pyecotrend_ista as ista
@@ -43,7 +43,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=CONF_TYPE_HEATWATER,
         name="Warmwasser",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
+        device_class=CONF_TYPE_HEATWATER,
         state_class=SensorStateClass.TOTAL,
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:water",
@@ -52,7 +52,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=CONF_TYPE_HEATING,
         name="Heizung",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
+        device_class=CONF_TYPE_HEATING,
         state_class=SensorStateClass.TOTAL,
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:radiator",
@@ -70,7 +70,6 @@ async def async_setup_platform(
         return
     controller: ista.PyEcotrendIsta = hass.data[DOMAIN][discovery_info[CONF_CONTROLLER]]
     _LOGGER.debug(f"PyEcotrendIsta version: {controller.getVersion()}")
-    unit = hass.data[CONF_UNIT][discovery_info[CONF_CONTROLLER]]
     unitheating = hass.data[CONF_UNIT_HEATING][discovery_info[CONF_CONTROLLER]]
     unitwarmwater = hass.data[CONF_UNIT_WARMWATER][discovery_info[CONF_CONTROLLER]]
     updateTime = hass.data[CONF_UPDATE_FREQUENCY][discovery_info[CONF_CONTROLLER]]
@@ -88,21 +87,23 @@ async def async_setup_platform(
     support_types: List[str] = await controller.getTypes()
     _LOGGER.debug(f"PyEcotrendIsta supported types: {support_types}")
 
+    def setUnit():
+        unit_type = CONF_UNIT_HEATING.split("_")[1]
+        if unit_type == description.key:
+            unit = "" if unitheating == UNIT_SUPPORT_HEATING[1] else unitheating
+        unit_type = CONF_UNIT_WARMWATER.split("_")[1]
+        if unit_type == description.key:
+            unit = "" if unitwarmwater == UNIT_SUPPORT_WARMWATER[1] else unitwarmwater
+        return unit
+
     for description in SENSOR_TYPES:
         if consums:
             for consum in consums:
                 if description.key == consum.get("type", ""):
-                    if unitheating != "":
-                        unit_type = CONF_UNIT_HEATING.split("_")[1]
-                        if unit_type == description.key:
-                            unit = unitheating
-                    if unitwarmwater != "":
-                        unit_type = CONF_UNIT_WARMWATER.split("_")[1]
-                        if unit_type == description.key:
-                            unit = unitwarmwater
                     if not device_id or consum.get("entity_id", "") not in device_id:
-                        entities.append(EcoSensor(controller, description, consum, updateTime, unit))
+                        entities.append(EcoSensor(controller, description, consum, updateTime, setUnit()))
                         device_id.append(consum.get("entity_id", ""))
+            _LOGGER.debug("load consums")
         if yearmonth:
             for ym in yearmonth:
                 ymL: List[str] = ym.split(".")
@@ -117,17 +118,9 @@ async def async_setup_platform(
                 )  # warmwasser_yyyy_m_xxxxxxxxx
                 if consumsyearmonth:
                     if description.key == consumsyearmonth.get("type", ""):
-                        if unitheating != "":
-                            unit_type = CONF_UNIT_HEATING.split("_")[1]
-                            if unit_type == description.key:
-                                unit = unitheating
-                        if unitwarmwater != "":
-                            unit_type = CONF_UNIT_WARMWATER.split("_")[1]
-                            if unit_type == description.key:
-                                unit = unitwarmwater
                         if not device_id or consumsyearmonth.get("entity_id", "") not in device_id:
                             entities.append(
-                                EcoYearMonthSensor(controller, description, consumsyearmonth, updateTime, yyyy, m, unit)
+                                EcoYearMonthSensor(controller, description, consumsyearmonth, updateTime, yyyy, m, setUnit())
                             )
                             device_id.append(consumsyearmonth.get("entity_id", ""))
             _LOGGER.debug("load yearmonth")
@@ -136,19 +129,10 @@ async def async_setup_platform(
                 consumsyear: List[Dict[str, Any]] = await controller.getConsumsByYear(y)
                 if consumsyear:
                     for consum in consumsyear:
-                        if consum:
-                            if description.key == consum.get("type", ""):
-                                if unitheating != "":
-                                    unit_type = CONF_UNIT_HEATING.split("_")[1]
-                                    if unit_type == description.key:
-                                        unit = unitheating
-                                if unitwarmwater != "":
-                                    unit_type = CONF_UNIT_WARMWATER.split("_")[1]
-                                    if unit_type == description.key:
-                                        unit = unitwarmwater
-                                if not device_id or consum.get("entity_id", "") not in device_id:
-                                    entities.append(EcoYearSensor(controller, description, consum, updateTime, y, unit))
-                                    device_id.append(consum.get("entity_id", ""))
+                        if description.key == consum.get("type", ""):
+                            if not device_id or consum.get("entity_id", "") not in device_id:
+                                entities.append(EcoYearSensor(controller, description, consum, updateTime, y, setUnit()))
+                                device_id.append(consum.get("entity_id", ""))
             _LOGGER.debug("load year")
 
     add_entities(entities, True)
