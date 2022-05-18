@@ -25,7 +25,8 @@ from .const import (
     CONF_YEARMONTH,
     DEFAULT_SCAN_INTERVAL_TIME,
     DOMAIN,
-    UNIT_SUPPORT,
+    UNIT_SUPPORT_HEATING,
+    UNIT_SUPPORT_WARMWATER,
 )
 
 from pyecotrend_ista import pyecotrend_ista as ista
@@ -39,9 +40,14 @@ CONTROLLER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_EMAIL): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_UNIT, default=""): cv.string,
-        vol.Optional(CONF_UNIT_HEATING, default=""): cv.string,
-        vol.Optional(CONF_UNIT_WARMWATER, default=""): cv.string,
+        ##############################################
+        ########## deprecated configuration ##########
+        ##############################################
+        ########## options v1.0.7-beta-3 #############
+        vol.Remove(CONF_UNIT): cv.string,  ###########
+        ##############################################
+        vol.Optional(CONF_UNIT_HEATING, default="kwh"): cv.string,
+        vol.Optional(CONF_UNIT_WARMWATER, default="kwh"): cv.string,
         vol.Optional(CONF_YEAR, default=[]): cv.ensure_list,
         vol.Optional(CONF_YEARMONTH, default=[]): cv.ensure_list,
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
@@ -57,7 +63,6 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[CONF_EMAIL] = []
     hass.data[CONF_PASSWORD] = []
-    hass.data[CONF_UNIT] = []
     hass.data[CONF_UNIT_HEATING] = []
     hass.data[CONF_UNIT_WARMWATER] = []
     hass.data[CONF_UPDATE_FREQUENCY] = []
@@ -73,21 +78,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def _setup_controller(hass: HomeAssistant, controller_config, config: ConfigType) -> bool:
     email: str = controller_config[CONF_EMAIL]
     password: str = controller_config[CONF_PASSWORD]
-    unit = controller_config[CONF_UNIT]
     unitheating = controller_config[CONF_UNIT_HEATING]
     unitwarmwater = controller_config[CONF_UNIT_WARMWATER]
-    if (
-        (unit != "" and unit not in UNIT_SUPPORT)
-        or (unitheating != "" and unitheating not in UNIT_SUPPORT)
-        or (unitwarmwater != "" and unitwarmwater not in UNIT_SUPPORT)
-    ):
-        raise Exception(f'unit "{unit}" don\'t supported. Only: {UNIT_SUPPORT} or remove unit: "{unit}"')
+
+    if unitheating != "" and unitheating not in UNIT_SUPPORT_HEATING:
+        raise Exception(f'unit "{unitheating}" don\'t supported. Only: {UNIT_SUPPORT_HEATING} or remove unit: "{unitheating}"')
+    if unitwarmwater != "" and unitwarmwater not in UNIT_SUPPORT_WARMWATER:
+        raise Exception(
+            f'unit "{unitwarmwater}" don\'t supported. Only: {UNIT_SUPPORT_WARMWATER} or remove unit: "{unitwarmwater}"'
+        )
+
     eco = ista.PyEcotrendIsta(email=email, password=password)
     await eco.login()
     position = len(hass.data[DOMAIN])
     hass.data[CONF_EMAIL].append(email)
     hass.data[CONF_PASSWORD].append(password)
-    hass.data[CONF_UNIT].append(unit)
     hass.data[CONF_UNIT_HEATING].append(unitheating)
     hass.data[CONF_UNIT_WARMWATER].append(unitwarmwater)
     hass.data[CONF_UPDATE_FREQUENCY].append(controller_config[CONF_SCAN_INTERVAL])
