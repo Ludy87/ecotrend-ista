@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import datetime
 
-from typing import Any, Dict, List, Mapping
+from typing import Any, Dict, Mapping
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.helpers.entity import DeviceInfo
