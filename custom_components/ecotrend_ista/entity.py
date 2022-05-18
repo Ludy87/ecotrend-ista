@@ -32,7 +32,7 @@ class EcoEntity(SensorEntity, RestoreEntity):
         self._consum = consum
         try:
             self._name = "{}".format(self._consum.get("entity_id"))
-        except:
+        except Exception:
             raise Exception("no entity_id, check your settings or ecotrend-isata has no data")
         self._attr_unique_id = self._name
         self._attr_last_reset = datetime.datetime.now()
