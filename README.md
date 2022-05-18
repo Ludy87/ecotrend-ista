@@ -53,14 +53,12 @@ yearmonth:
 ```yaml
 scan_interval: 39600
 ```
-
+---
 ### deprecated v1.0.7-beta-3
 
 ```yaml
 unit: "kwh"
 ```
-
-
 ---
 
 ## Template
