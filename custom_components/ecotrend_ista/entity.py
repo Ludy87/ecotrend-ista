@@ -78,3 +78,8 @@ class EcoEntity(SensorEntity, RestoreEntity):
             "unitkwh": self._consum.get("unitkwh", ""),
             "valuekwh": float(str(self._consum.get("valuekwh", "-1")).replace(",", ".")),
         }
+
+    @property
+    def device_class(self) -> str | None:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return self.entity_description.key
