@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import datetime
 
-from typing import Any, Dict, List, Mapping
+from typing import Any, Dict, Mapping
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.helpers.entity import DeviceInfo
@@ -32,7 +32,7 @@ class EcoEntity(SensorEntity, RestoreEntity):
         self._consum = consum
         try:
             self._name = "{}".format(self._consum.get("entity_id"))
-        except:
+        except Exception:
             raise Exception("no entity_id, check your settings or ecotrend-isata has no data")
         self._attr_unique_id = self._name
         self._attr_last_reset = datetime.datetime.now()
@@ -78,3 +78,8 @@ class EcoEntity(SensorEntity, RestoreEntity):
             "unitkwh": self._consum.get("unitkwh", ""),
             "valuekwh": float(str(self._consum.get("valuekwh", "-1")).replace(",", ".")),
         }
+
+    @property
+    def device_class(self) -> str | None:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return self.entity_description.key

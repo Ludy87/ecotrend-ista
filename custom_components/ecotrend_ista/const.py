@@ -8,7 +8,6 @@ CONF_PASSWORD = "password"
 CONF_UPDATE_FREQUENCY = "update_frequency"
 
 CONF_UNIT = "unit"
-CONF_UNIT = "unit"
 CONF_UNIT_HEATING = "unit_heating"
 CONF_UNIT_WARMWATER = "unit_warmwater"
 CONF_YEARMONTH = "yearmonth"
@@ -18,3 +17,5 @@ CONF_TYPE_HEATING = "heating"
 CONF_TYPE_HEATWATER = "warmwater"
 
 UNIT_SUPPORT = ["kwh"]
+UNIT_SUPPORT_HEATING = ["kwh", "Einheiten"]
+UNIT_SUPPORT_WARMWATER = ["kwh", "m³"]
