@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import datetime
 
-from typing import Any, Dict, Mapping
+from typing import Any, Dict, List, Mapping
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.helpers.entity import DeviceInfo
@@ -25,23 +25,20 @@ class EcoEntity(SensorEntity, RestoreEntity):
         description: SensorEntityDescription,
         consum: Dict[str, Any],
         unit: str,
+        consumSmall: List[Dict[str, Any]],
     ) -> None:
         self._controller = controller
         self._supportCode = controller.getSupportCode()
         self.entity_description = description
         self._consum = consum
+        self._consumSmall = consumSmall
         try:
-            self._name = "{}".format(self._consum.get("entity_id"))
+            self._attr_name = "{}".format(self._consum.get("entity_id"))
         except Exception:
             raise Exception("no entity_id, check your settings or ecotrend-isata has no data")
-        self._attr_unique_id = self._name
+        self._attr_unique_id = self._attr_name
         self._attr_last_reset = datetime.datetime.now()
         self._unit = unit
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the entity."""
-        return self._name
 
     @property
     def native_unit_of_measurement(self) -> str | None:
@@ -63,7 +60,7 @@ class EcoEntity(SensorEntity, RestoreEntity):
         return DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="ista",
-            name=self._name,
+            name=self._attr_name,
         )
 
     @property
@@ -72,11 +69,33 @@ class EcoEntity(SensorEntity, RestoreEntity):
         Implemented by platform classes. Convention for attribute names
         is lowercase snake_case.
         """
+        history_kwh = {}
+        history = {}
+        for s in self._consumSmall:
+            if self.entity_description.key == (s.get("type", "")) and self._consum.get("entity_id", "-") != s.get(
+                "entity_id", "#"
+            ):
+                history_kwh.update(
+                    {
+                        "{}-{} kwh".format(s.get("date", {}).get("year", ""), s.get("date", {}).get("month", "")): s.get(
+                            "valuekwh", -1.0
+                        )
+                    }
+                )
+                history.update(
+                    {
+                        "{}-{} {}".format(s.get("date", {}).get("year", ""), s.get("date", {}).get("month", ""), s.get("unit", "")): s.get(
+                            "value", -1.0
+                        )
+                    }
+                )
         return {
             "unit": self._consum.get("unit", ""),
             "value": float(str(self._consum.get("value", "-1")).replace(",", ".")),
+            **history,
             "unitkwh": self._consum.get("unitkwh", ""),
             "valuekwh": float(str(self._consum.get("valuekwh", "-1")).replace(",", ".")),
+            **history_kwh,
         }
 
     @property

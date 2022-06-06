@@ -35,6 +35,7 @@ ecotrend_ista:
   email: "email@local"
   password: "password"
 ```
+![list_all](https://github.com/Ludy87/ecotrend-ista/blob/main/image/list_all.png?raw=true)
 
 ### optional
 
