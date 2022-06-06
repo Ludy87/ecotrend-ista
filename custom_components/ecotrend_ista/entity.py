@@ -84,9 +84,9 @@ class EcoEntity(SensorEntity, RestoreEntity):
                 )
                 history.update(
                     {
-                        "{}-{} {}".format(s.get("date", {}).get("year", ""), s.get("date", {}).get("month", ""), s.get("unit", "")): s.get(
-                            "value", -1.0
-                        )
+                        "{}-{} {}".format(
+                            s.get("date", {}).get("year", ""), s.get("date", {}).get("month", ""), s.get("unit", "")
+                        ): s.get("value", -1.0)
                     }
                 )
         return {

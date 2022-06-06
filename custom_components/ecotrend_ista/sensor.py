@@ -121,7 +121,9 @@ async def async_setup_platform(
                     if description.key == consumsyearmonth.get("type", ""):
                         if not device_id or consumsyearmonth.get("entity_id", "") not in device_id:
                             entities.append(
-                                EcoYearMonthSensor(controller, description, consumsyearmonth, updateTime, yyyy, m, setUnit(), consumSmall)
+                                EcoYearMonthSensor(
+                                    controller, description, consumsyearmonth, updateTime, yyyy, m, setUnit(), consumSmall
+                                )
                             )
                             device_id.append(consumsyearmonth.get("entity_id", ""))
             _LOGGER.debug("load yearmonth")
@@ -132,7 +134,9 @@ async def async_setup_platform(
                     for consum in consumsyear:
                         if description.key == consum.get("type", ""):
                             if not device_id or consum.get("entity_id", "") not in device_id:
-                                entities.append(EcoYearSensor(controller, description, consum, updateTime, y, setUnit(), consumSmall))
+                                entities.append(
+                                    EcoYearSensor(controller, description, consum, updateTime, y, setUnit(), consumSmall)
+                                )
                                 device_id.append(consum.get("entity_id", ""))
             _LOGGER.debug("load year")
 
