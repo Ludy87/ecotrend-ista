@@ -6,7 +6,7 @@
   "issue_tracker": "https://github.com/Ludy87/ecotrend-ista/issues",
   "dependencies": [],
   "requirements": [
-    "pyecotrend_ista==1.0.33"
+    "pyecotrend_ista==1.0.35"
   ],
   "codeowners": ["@Ludy87"],
   "iot_class": "local_polling"
