@@ -7,8 +7,8 @@
 ![GitHub Release Date](https://img.shields.io/github/release-date/Ludy87/ecotrend-ista?style=for-the-badge&logo=appveyor)
 [![GitHub](https://img.shields.io/github/license/Ludy87/ecotrend-ista?style=for-the-badge&logo=appveyor)](LICENSE)
 [![GitHub issues](https://img.shields.io/github/issues/Ludy87/ecotrend-ista?style=for-the-badge&logo=appveyor)](https://github.com/Ludy87/ecotrend-ista/issues)
-[![Total alerts](https://img.shields.io/lgtm/alerts/g/Ludy87/ecotrend-ista.svg?logo=lgtm&logoWidth=18&style=for-the-badge&logo=appveyor)](https://lgtm.com/projects/g/Ludy87/ecotrend-ista/alerts/)
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/Ludy87/ecotrend-ista.svg?logo=lgtm&logoWidth=18&style=for-the-badge&logo=appveyor)](https://lgtm.com/projects/g/Ludy87/ecotrend-ista/context:python)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/Ludy87/ecotrend-ista.svg?logo=lgtm&logoWidth=18&style=for-the-badge)](https://lgtm.com/projects/g/Ludy87/ecotrend-ista/alerts/)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/Ludy87/ecotrend-ista.svg?logo=lgtm&logoWidth=18&style=for-the-badge)](https://lgtm.com/projects/g/Ludy87/ecotrend-ista/context:python)
 [![Validate with hassfest and HACS](https://github.com/Ludy87/ecotrend-ista/actions/workflows/hassfest.yaml/badge.svg)](https://github.com/Ludy87/ecotrend-ista/actions/workflows/hassfest.yaml)
 
 ![ecotrend-ista](https://github.com/Ludy87/ecotrend-ista/blob/main/image/logo@2x.png?raw=true)
