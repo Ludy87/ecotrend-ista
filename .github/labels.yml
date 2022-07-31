@@ -52,3 +52,6 @@
 - name: "Beta"
   description: Beta Version Release
   color: d73a4a
+- name: NEWS
+  description: Ingegration News
+  color: "016175"
