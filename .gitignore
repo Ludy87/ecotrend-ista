@@ -130,3 +130,6 @@ dmypy.json
 .pyre/
 *.txt
 *test*
+
+# Home Assistant Core
+/homeassistant
