@@ -55,3 +55,7 @@
 - name: NEWS
   description: Integration News
   color: "016175"
+- name: "Version 1"
+  color: "ff0000"
+- name: "Version 2"
+  color: "5319e7"
