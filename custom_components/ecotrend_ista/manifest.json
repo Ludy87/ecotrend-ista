@@ -1,13 +1,15 @@
 {
   "domain": "ecotrend_ista",
   "name": "ecotrend ista",
-  "version": "v1.0.11",
-  "documentation": "https://github.com/Ludy87/ecotrend-ista/tree/main",
-  "issue_tracker": "https://github.com/Ludy87/ecotrend-ista/issues",
-  "dependencies": [],
-  "requirements": [
-    "pyecotrend_ista==1.0.37"
-  ],
   "codeowners": ["@Ludy87"],
-  "iot_class": "local_polling"
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/Ludy87/ecotrend-ista/tree/main",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/Ludy87/ecotrend-ista/issues",
+  "requirements": [
+    "pyecotrend_ista==2.0.9"
+  ],
+  "version": "v2.0.0"
 }
