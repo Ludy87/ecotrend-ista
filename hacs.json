@@ -2,6 +2,6 @@
   "name": "ecotrend_ista",
   "country": "DE",
   "render_readme": true,
-  "homeassistant": "2022.4.1",
-  "hacs": "1.25.1"
+  "homeassistant": "2022.4.0",
+  "hacs": "1.32.1"
 }
