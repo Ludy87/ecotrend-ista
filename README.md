@@ -16,7 +16,7 @@
 [✨ Wishlist from Amazon ✨](https://smile.amazon.de/registry/wishlist/2MX8QK8VE9MV1)
 
 ---
-![ista EcoTrend V2](https://github.com/Ludy87/ecotrend-ista/blob/main/image/logo@2x.png?raw=true)
+![ista EcoTrend V2](https://github.com/Ludy87/ecotrend-ista/blob/main/image/logo@2x_new.png?raw=true)
 
 ## Installation
 
