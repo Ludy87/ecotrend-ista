@@ -26,6 +26,19 @@ jobs:
         run: |
           version="$(python3 ./.github/actions/get_version.py)"
           echo "version=$version" >> $GITHUB_OUTPUT
+      - uses: actions/checkout@v3.5.0
+      - name: ZIP Component Dir
+        run: |
+          cd ${{ github.workspace }}/custom_components/ecotrend_ista
+          zip -r ecotrend_ista.zip ./
+      - name: Upload zip to release
+        uses: svenstaro/upload-release-action@2.5.0
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ github.workspace }}/custom_components/ecotrend_ista/ecotrend_ista.zip
+          asset_name: ecotrend_ista.zip
+          tag: ${{ steps.version.outputs.version }}
+          overwrite: true
       - name: Is Tag exists
         uses: mukunku/tag-exists-action@v1.2.0
         id: checkTag
