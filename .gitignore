@@ -133,3 +133,6 @@ dmypy.json
 
 # Home Assistant Core
 /homeassistant
+
+# Dev Files
+codiga.*
