@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Integration has already been configured",
+            "single_instance_allowed": "Already configured. Only a single configuration is allowed."
+        },
+        "error": {
+            "cannot_connect": "Connection failed",
+            "auth_inval": "Login failed. Incorrect email address, password, or login URL.",
+            "not_allowed": "The selected URL is not yet supported"
+        },
+        "create_entry": {
+            "default": "ista EcoTrend integration has been created!"
+        },
+        "step": {
+            "german": {
+                "title": "Set up ista EcoTrend",
+                "description": "Account authentication",
+                "data": {
+                    "email": "Email address",
+                    "password": "Password",
+                    "URL": "Login URL",
+                    "update_interval": "Update Interval (h)"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "not_allowed": "The selected URL is not yet supported"
+        },
+        "step": {
+            "init": {
+                "title": "Settings for ista EcoTrend",
+                "data": {
+                    "URL": "Login URL",
+                    "update_interval": "Update Interval (h)"
+                }
+            }
+        }
+    }
+}
