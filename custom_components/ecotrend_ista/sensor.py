@@ -50,6 +50,7 @@ class EcotrendBaseEntityV2(CoordinatorEntity[IstaDataUpdateCoordinator], Restore
             model="ista consumption & costs",
             name=f"{DEVICE_NAME} {self._support_code} {'' if controller._accessToken != 'Demo' else 'Demo'}",
             sw_version=controller.getVersion(),
+            hw_version=controller._a_tosUpdated,
             via_device=(DOMAIN, f"{self._support_code}"),
         )
         self._unsub_dispatchers: list[Callable[[], None]] = []
