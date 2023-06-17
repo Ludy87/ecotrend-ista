@@ -47,7 +47,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure based on config entry."""
-    _LOGGER.debug("Configure based on config entry")
+    _LOGGER.debug("Configure based on config entry %s", entry.entry_id)
     coordinator = IstaDataUpdateCoordinator(hass, entry)
     await coordinator.init()
     await coordinator.async_config_entry_first_refresh()
