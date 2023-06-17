@@ -18,7 +18,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_TYPE_HEATING_CUSTOM, CONF_TYPE_WATER_CUSTOM, CONF_URL, DEVICE_NAME, DOMAIN, MANUFACTURER, TRACKER_UPDATE_STR
+from .const import (
+    CONF_TYPE_HEATING_CUSTOM,
+    CONF_TYPE_WATER_CUSTOM,
+    CONF_URL,
+    DEVICE_NAME,
+    DOMAIN,
+    MANUFACTURER,
+    TRACKER_UPDATE_STR,
+)
 from .const_schema import URL_SELECTORS
 from .coordinator import IstaDataUpdateCoordinator
 from .entitys import SENSOR_TYPES, EcotrendSensorEntityDescription
@@ -34,7 +42,7 @@ class EcotrendBaseEntityV2(CoordinatorEntity[IstaDataUpdateCoordinator], Restore
     def __init__(self, coordinator: IstaDataUpdateCoordinator, controller: PyEcotrendIsta) -> None:
         """Initialize the ista EcoTrend Version 2 base entity."""
         super().__init__(coordinator)
-        self._attr_attribution = f'Data provided by {URL_SELECTORS.get(self.coordinator.config_entry.options.get(CONF_URL))}'
+        self._attr_attribution = f"Data provided by {URL_SELECTORS.get(self.coordinator.config_entry.options.get(CONF_URL))}"
         self._support_code = controller._supportCode
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self._support_code}")},
