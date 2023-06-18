@@ -20,7 +20,7 @@
   description: This issue or pull request already exists
   color: cfd3d7
 - name: feature request
-  description: Request a new ecotrend-ista feature
+  description: Request a new ista EcoTrend feature
   color: a2eeef
 - name: help wanted
   description: Extra attention is needed
@@ -55,3 +55,7 @@
 - name: NEWS
   description: Integration News
   color: "016175"
+- name: "Version 1"
+  color: "ff0000"
+- name: "Version 2"
+  color: "5319e7"

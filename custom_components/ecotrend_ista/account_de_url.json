@@ -1,0 +1,38 @@
+{
+    "firstName": "Max",
+    "lastName": "Istamann",
+    "email": "demo@ista.de",
+    "keycloakId": null,
+    "country": "DE",
+    "locale": "de_DE",
+    "authcode": null,
+    "tos": "10.0",
+    "tosUpdated": "30.08.2021",
+    "privacy": null,
+    "mobileNumber": "123456789",
+    "transitionMobileNumber": "",
+    "unconfirmedPhoneNumber": null,
+    "password": null,
+    "enabled": true,
+    "consumptionUnitUuids": [
+        "26e93f1a-c828-11ea-87d0-0242ac130003"
+    ],
+    "residentTimeRangeUuids": [
+        "26e93f1a-c828-11ea-87d0-0242ac130003"
+    ],
+    "ads": true,
+    "marketing": true,
+    "fcmToken": "null",
+    "betaPhase": null,
+    "notificationMethod": "none",
+    "emailConfirmed": false,
+    "isDemo": true,
+    "userGroup": "demo",
+    "mobileLoginStatus": "pending",
+    "residentAndConsumptionUuidsMap": {
+        "26e93f1a-c828-11ea-87d0-0242ac130003": "26e93f1a-c828-11ea-87d0-0242ac130003"
+    },
+    "activeConsumptionUnit": "26e93f1a-c828-11ea-87d0-0242ac130003",
+    "supportCode": "HFJYYWJX2",
+    "notificationMethodEmailConfirmed": false
+}

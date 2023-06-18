@@ -1,21 +1,35 @@
+"""Const for ista EcoTrend Version 2."""
+from __future__ import annotations
+
+from typing import Final
+
 DOMAIN = "ecotrend_ista"
+MANUFACTURER: Final = "Ista"
+DEVICE_NAME: Final = "ista EcoTrend®"
 
-DEFAULT_SCAN_INTERVAL_TIME = 11 * 60 * 60
+DATA_HASS_CONFIG: Final = "hass_config"
 
-CONF_CONTROLLER = "controller"
-CONF_EMAIL = "email"
-CONF_PASSWORD = "password"
-CONF_UPDATE_FREQUENCY = "update_frequency"
+TRACKER_UPDATE_STR: Final = f"{DOMAIN}_tracker_update"
 
+# Deprecated config
 CONF_UNIT = "unit"
 CONF_UNIT_HEATING = "unit_heating"
 CONF_UNIT_WARMWATER = "unit_warmwater"
 CONF_YEARMONTH = "yearmonth"
 CONF_YEAR = "year"
+# Deprecated config
 
-CONF_TYPE_HEATING = "heating"
-CONF_TYPE_HEATWATER = "warmwater"
+CONF_URL: Final = "URL"
+CONF_UPDATE_INTERVAL: Final = "update_interval"
 
-UNIT_SUPPORT = ["kwh"]
-UNIT_SUPPORT_HEATING = ["kwh", "Einheiten"]
-UNIT_SUPPORT_WARMWATER = ["kwh", "m³"]
+CONF_TYPE_HEATING: Final = "heating"
+CONF_TYPE_HEATING_CASH: Final = "heating_costs"
+CONF_TYPE_HEATING_CUSTOM: Final = "heating_custom"
+
+CONF_TYPE_HEATWATER: Final = "warmwater"
+CONF_TYPE_HEATWATER_CASH: Final = "warmwater_costs"
+CONF_TYPE_HEATWATER_CUSTOM: Final = "warmwater_custom"
+
+CONF_TYPE_WATER: Final = "water"
+CONF_TYPE_WATER_CASH: Final = "water_costs"
+CONF_TYPE_WATER_CUSTOM: Final = "water_custom"

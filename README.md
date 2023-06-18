@@ -1,22 +1,20 @@
-# ecotrend-ista
+# ista EcoTrend Version 2
 
-[ecotrend-ista](https://ecotrend.ista.de/) Home Assistant Integration
-
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge&logo=appveyor)](https://github.com/hacs/integration)
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/Ludy87/ecotrend-ista?style=for-the-badge&logo=appveyor)](https://github.com/Ludy87/ecotrend-ista/releases)
-![GitHub Release Date](https://img.shields.io/github/release-date/Ludy87/ecotrend-ista?style=for-the-badge&logo=appveyor)
-[![GitHub](https://img.shields.io/github/license/Ludy87/ecotrend-ista?style=for-the-badge&logo=appveyor)](LICENSE)
-[![GitHub issues](https://img.shields.io/github/issues/Ludy87/ecotrend-ista?style=for-the-badge&logo=appveyor)](https://github.com/Ludy87/ecotrend-ista/issues)
-[![Total alerts](https://img.shields.io/lgtm/alerts/g/Ludy87/ecotrend-ista.svg?logo=lgtm&logoWidth=18&style=for-the-badge)](https://lgtm.com/projects/g/Ludy87/ecotrend-ista/alerts/)
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/Ludy87/ecotrend-ista.svg?logo=lgtm&logoWidth=18&style=for-the-badge)](https://lgtm.com/projects/g/Ludy87/ecotrend-ista/context:python)
-[![Validate with hassfest and HACS](https://github.com/Ludy87/ecotrend-ista/actions/workflows/hassfest.yaml/badge.svg)](https://github.com/Ludy87/ecotrend-ista/actions/workflows/hassfest.yaml)
-
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/ludy87)
-
-[✨ Wishlist from Amazon ✨](https://smile.amazon.de/registry/wishlist/2MX8QK8VE9MV1)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://img.shields.io/badge/My-HACS:%20REPOSITORY-000000.svg?&style=for-the-badge&logo=home-assistant&logoColor=white&color=049cdb)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Ludy87&repository=ecotrend-ista&category=integration)
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge&logo=home-assistant&logoColor=white)](https://github.com/hacs/integration)
+![Validate with hassfest and HACS](https://img.shields.io/github/actions/workflow/status/Ludy87/ecotrend-ista/hassfest.yaml?label=Validate%20with%20hassfest%20and%20hacs&style=for-the-badge&logo=home-assistant&logoColor=white)\
+[![GitHub license](https://img.shields.io/github/license/Ludy87/ecotrend-ista?label=📜%20License&style=for-the-badge&logo=informational&logoColor=white)](LICENSE)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/Ludy87/ecotrend-ista?style=for-the-badge&logo=GitHub&logoColor=white)](https://github.com/Ludy87/ecotrend-ista/releases)
+![GitHub Release Date](https://img.shields.io/github/release-date/Ludy87/ecotrend-ista?style=for-the-badge&logo=GitHub&logoColor=white)
+[![GitHub stars](https://img.shields.io/github/stars/Ludy87/ecotrend-ista?style=for-the-badge&logo=GitHub&logoColor=white)](https://github.com/Ludy87/ecotrend-ista/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/Ludy87/ecotrend-ista?style=for-the-badge&logo=GitHub&logoColor=white)](https://github.com/Ludy87/ecotrend-ista/issues)
+![Github All Releases](https://img.shields.io/github/downloads/Ludy87/ecotrend-ista/total.svg?style=for-the-badge&logo=GitHub&logoColor=white)\
+![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge&logoColor=white)\
+[![✨ Wishlist from Amazon ✨](https://img.shields.io/static/v1.svg?label=✨%20Wishlist%20from%20Amazon%20✨&message=📖&color=green&logo=amazon&style=for-the-badge&logoColor=white)](https://smile.amazon.de/registry/wishlist/2MX8QK8VE9MV1)
+[![Buy me a coffee](https://img.shields.io/static/v1.svg?label=Buy%20me%20a%20coffee&message=donate&style=for-the-badge&color=black&logo=buy%20me%20a%20coffee&logoColor=white&labelColor=orange)](https://www.buymeacoffee.com/ludy87)
 
 ---
-![ecotrend-ista](https://github.com/Ludy87/ecotrend-ista/blob/main/image/logo@2x.png?raw=true)
+![ista EcoTrend V2](https://github.com/Ludy87/ecotrend-ista/blob/main/image/logo@2x_new.png?raw=true)
 
 ## Installation
 
@@ -27,90 +25,25 @@ Copy the ecotrend_ista [last Releae](https://github.com/Ludy87/ecotrend-ista/rel
 ### INSTALLATION mit HACS
 
 1. Ensure that [HACS](https://hacs.xyz/) is installed.
-2. Search for and install the "**ecotrend ista Integration**" integration. [![GitHub release (latest by date)](https://img.shields.io/github/v/release/Ludy87/ecotrend-ista?style=for-the-badge&logo=appveyor)](https://github.com/Ludy87/ecotrend-ista/releases)
-3. [Add a `ecotrend_ista` entry to your `configuration.yaml`.](https://github.com/Ludy87/ecotrend-ista#basis-configuration)
+2. Search for and install the "__ecotrend ista Integration__" integration. [![GitHub release (latest by date)](https://img.shields.io/github/v/release/Ludy87/ecotrend-ista?style=for-the-badge&logo=GitHub)](https://github.com/Ludy87/ecotrend-ista/releases)
+3. [Configuration for the `ista EcoTrend` integration is now performed via a config flow as opposed to yaml configuration file.](https://github.com/Ludy87/ecotrend-ista#basis-configuration)
 4. Restart Home Assistant.
 
 ---
 
 ## Basis Configuration
 
-Add entry to your `configuration.yaml`
+1. Go to HACS -> Integrations -> Click "+"
+2. Search for "ista EcoTrend" repository and add to HACS
+3. Restart Home Assistant when it says to.
+4. In Home Assistant, go to Configuration -> Integrations -> Click "+ Add Integration"
+5. Search for "ista EcoTrend" and follow the instructions to setup.
 
-```yaml
-ecotrend_ista:
-  email: "email@local"
-  password: "password"
-```
-![list_all](https://github.com/Ludy87/ecotrend-ista/blob/main/image/list_all.png?raw=true)
+ista EcoTrend should now appear as a card under the HA Integrations page with "Configure" selection available at the bottom of the card.
 
-### optional
-
-```yaml
-unit_heating: "Einheiten"  # default kwh
-unit_warmwater: "m³"  # default kwh
-```
-
-```yaml
-year:
-  - 2022
-yearmonth:
-  - "2022.4"
-```
-
-```yaml
-scan_interval: 39600
-```
----
-### deprecated v1.0.7-beta-3
-
-```yaml
-unit: "kwh"
-```
 ---
 
-## Template
-
-```yaml
-- template:
-    - sensor:
-        - name: ECO Heizung Einheiten
-          unit_of_measurement: "Einheiten"
-          state: "{{ state_attr('sensor.heating_XXXXXXXXX', 'value') }}"
-          state_class: total
-        - name: ECO Heizung kwh
-          unit_of_measurement: "kwh"
-          state: "{{ state_attr('sensor.heating_XXXXXXXXX', 'valuekwh') }}"
-          state_class: total
-        - name: ECO Wasserverbrauch m³
-          unit_of_measurement: "m³"
-          state: "{{ state_attr('sensor.warmwater_XXXXXXXXX', 'value') }}"
-          state_class: total
-        - name: ECO Wasserverbrauch kwh
-          unit_of_measurement: "kwh"
-          state: "{{ state_attr('sensor.warmwater_XXXXXXXXX', 'valuekwh') }}"
-          state_class: total
-        - name: ECO Heizung Einheiten 03/2022
-          unit_of_measurement: "Einheiten"
-          state: "{{ state_attr('sensor.heating_2022_3_XXXXXXXXX', 'value') }}"
-          state_class: total
-        - name: ECO Heizung kwh 03/2022
-          unit_of_measurement: "kwh"
-          state: "{{ state_attr('sensor.heating_2022_3_XXXXXXXXX', 'valuekwh') }}"
-          state_class: total
-        - name: ECO Wasserverbrauch m³ 03/2022
-          unit_of_measurement: "m³"
-          state: "{{ state_attr('sensor.warmwater_2022_3_XXXXXXXXX', 'value') }}"
-          state_class: total
-        - name: ECO Wasserverbrauch kwh 03/2022
-          unit_of_measurement: "kwh"
-          state: "{{ state_attr('sensor.warmwater_2022_3_XXXXXXXXX', 'valuekwh') }}"
-          state_class: total
-```
-
-![](./image/template.png)
-
-# Debug
+## Debug
 
 ```yaml
 logger:
