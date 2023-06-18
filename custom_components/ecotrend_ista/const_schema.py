@@ -40,6 +40,7 @@ DATA_SCHEMA_EMAIL = {
     vol.Required(CONF_UPDATE_INTERVAL, default=24): NumberSelector(
         NumberSelectorConfig(mode=NumberSelectorMode.SLIDER, min=1, max=24)
     ),
+    # vol.Optional("dev_demo", default=False): BooleanSelector()
 }
 
 # remove Deprecated config
