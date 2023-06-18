@@ -125,19 +125,23 @@ class IstaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             last_step=True,
         )
 
-    async def async_step_import(self, import_data):
+    async def async_step_import(self, import_data: dict[str, Any]):
         """Import ista EcoTrend Version 2 config from configuration.yaml."""
 
-        _LOGGER.debug("Starting import of sensor from configuration.yaml - %s", import_data)
+        _import_data = import_data
+        _import_data[CONF_PASSWORD] = "*****"
+        _LOGGER.debug("Starting import of sensor from configuration.yaml - %s", _import_data)
         if import_data is None:
             _LOGGER.error(import_data)
             return self.async_abort(reason="No configuration to import.")
         self._async_abort_entries_match({CONF_EMAIL: import_data[CONF_EMAIL]})
         # Verarbeite die importierten Konfigurationsdaten weiter
+        import_data[CONF_URL] = "de_url"
+        import_data[CONF_UPDATE_INTERVAL] = 24
         return await self.async_step_german(import_data)
 
 
-def validate_options_input(user_input: dict[str, any]) -> dict[str, str]:
+def validate_options_input(user_input: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect.
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
@@ -150,7 +154,7 @@ def validate_options_input(user_input: dict[str, any]) -> dict[str, str]:
 class IstaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Handle a option flow."""
 
-    async def async_step_init(self, user_input: dict[str, any] | None = None) -> FlowResult:
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Handle options flow."""
         options = self.options
         errors: dict[str, str] = {}
