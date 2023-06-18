@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @staticmethod
 @core.callback
-def login_account(hass: core.HomeAssistant, data, demo: bool = False):
+def login_account(hass: core.HomeAssistant, data, demo: bool = False) -> PyEcotrendIsta:
     """Log into an Ecotrend-Ista account and return an account instance."""
     account = PyEcotrendIsta(
         email=data.get(CONF_EMAIL, None),
@@ -114,6 +114,7 @@ class IstaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     options={
                         CONF_URL: user_input[CONF_URL],
                         CONF_UPDATE_INTERVAL: user_input[CONF_UPDATE_INTERVAL],
+                        # "dev_demo": user_input["dev_demo"],
                     },
                 )
 
@@ -159,6 +160,7 @@ class IstaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 vol.Required(CONF_UPDATE_INTERVAL, default=options.get(CONF_UPDATE_INTERVAL, 24)): NumberSelector(
                     NumberSelectorConfig(mode=NumberSelectorMode.SLIDER, min=1, max=24)
                 ),
+                # vol.Optional("dev_demo", default=options.get("dev_demo", False)): BooleanSelector(),
             }
         )
         if user_input is not None:
