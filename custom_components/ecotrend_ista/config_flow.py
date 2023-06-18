@@ -23,6 +23,20 @@ from .const_schema import DATA_SCHEMA_EMAIL, URL_SELECTOR
 _LOGGER = logging.getLogger(__name__)
 
 
+@staticmethod
+@core.callback
+def login_account(hass: core.HomeAssistant, data, demo: bool = False):
+    """Log into an Ecotrend-Ista account and return an account instance."""
+    account = PyEcotrendIsta(
+        email=data.get(CONF_EMAIL, None),
+        password=data.get(CONF_PASSWORD, None),
+        logger=_LOGGER,
+        hass_dir=(hass.config.path("custom_components/ecotrend_ista") if demo else None),
+    )
+
+    return account
+
+
 async def validate_input(hass: core.HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect.
     Data has the keys from DATA_SCHEMA_EMAIL with values provided by the user.
@@ -36,12 +50,7 @@ async def validate_input(hass: core.HomeAssistant, data: dict[str, Any]) -> dict
     except vol.Invalid as error:
         raise vol.Invalid(error)
 
-    account = PyEcotrendIsta(
-        email=data.get(CONF_EMAIL, None),
-        password=data.get(CONF_PASSWORD, None),
-        logger=_LOGGER,
-        hass_dir=hass.config.path("custom_components/ecotrend_ista"),
-    )
+    account = login_account(hass, data)
 
     login_info = None
     try:
