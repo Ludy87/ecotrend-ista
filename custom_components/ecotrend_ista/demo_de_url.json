@@ -1,0 +1,343 @@
+{
+  "consumptionUnitId": "26e93f1a-c828-11ea-87d0-0242ac130003",
+  "resident": {
+    "movedOut": false,
+    "moveOutDate": null,
+    "invalid": false,
+    "invalidDate": null
+  },
+  "consumptions": [
+    {
+      "date": {
+        "month": 5,
+        "year": 2023
+      },
+      "readings": [
+        {
+          "type": "heating",
+          "value": "35",
+          "unit": "Einheiten",
+          "additionalValue": "38,0",
+          "additionalUnit": "kWh",
+          "estimated": false,
+          "comparedConsumption": {
+            "lastYearValue": 45.0,
+            "period": {
+              "month": 5,
+              "year": 2022
+            },
+            "smiley": "HAPPY",
+            "comparedPercentage": 22,
+            "comparedValue": "10"
+          },
+          "comparedCost": null,
+          "averageConsumption": {
+            "averageConsumptionValue": "25",
+            "residentConsumptionValue": "35",
+            "averageConsumptionPercentage": 71,
+            "residentConsumptionPercentage": 100,
+            "additionalAverageConsumptionValue": "27,2",
+            "additionalResidentConsumptionValue": "38,0",
+            "additionalAverageConsumptionPercentage": 72,
+            "additionalResidentConsumptionPercentage": 100
+          }
+        },
+        {
+          "type": "warmwater",
+          "value": "1,0",
+          "unit": "m³",
+          "additionalValue": "57,0",
+          "additionalUnit": "kWh",
+          "estimated": false,
+          "comparedConsumption": {
+            "lastYearValue": 0.7,
+            "period": {
+              "month": 5,
+              "year": 2022
+            },
+            "smiley": "MAD",
+            "comparedPercentage": 43,
+            "comparedValue": "0,3"
+          },
+          "comparedCost": null,
+          "averageConsumption": {
+            "averageConsumptionValue": "0,8",
+            "residentConsumptionValue": "1,0",
+            "averageConsumptionPercentage": 80,
+            "residentConsumptionPercentage": 100,
+            "additionalAverageConsumptionValue": "45,6",
+            "additionalResidentConsumptionValue": "57,0",
+            "additionalAverageConsumptionPercentage": 80,
+            "additionalResidentConsumptionPercentage": 100
+          }
+        },
+        {
+          "type": "water",
+          "value": "11,0",
+          "unit": "m³",
+          "additionalValue": "570,0",
+          "additionalUnit": "kWh",
+          "estimated": false,
+          "comparedConsumption": {
+            "lastYearValue": 7.0,
+            "period": {
+              "month": 5,
+              "year": 2022
+            },
+            "smiley": "HAPPY",
+            "comparedPercentage": 430,
+            "comparedValue": "30"
+          },
+          "comparedCost": null,
+          "averageConsumption": {
+            "averageConsumptionValue": "8,0",
+            "residentConsumptionValue": "10",
+            "averageConsumptionPercentage": 800,
+            "residentConsumptionPercentage": 1000,
+            "additionalAverageConsumptionValue": "456",
+            "additionalResidentConsumptionValue": "570",
+            "additionalAverageConsumptionPercentage": 800,
+            "additionalResidentConsumptionPercentage": 1000
+          }
+        }
+      ],
+      "exception": null,
+      "documentNumber": null
+    }
+  ],
+  "costs": [
+    {
+      "date": {
+        "month": 5,
+        "year": 2023
+      },
+      "exception": null,
+      "costsByEnergyType": [
+        {
+          "type": "heating",
+          "value": 21,
+          "unit": "EUR",
+          "estimated": false,
+          "comparedCost": {
+            "lastYearValue": 26.6,
+            "period": {
+              "month": 5,
+              "year": 2022
+            },
+            "smiley": "HAPPY",
+            "comparedPercentage": 22,
+            "comparedValue": "6"
+          }
+        },
+        {
+          "type": "warmwater",
+          "value": 7,
+          "unit": "EUR",
+          "estimated": false,
+          "comparedCost": {
+            "lastYearValue": 4.7,
+            "period": {
+              "month": 5,
+              "year": 2022
+            },
+            "smiley": "MAD",
+            "comparedPercentage": 47,
+            "comparedValue": "2"
+          }
+        },
+        {
+          "type": "water",
+          "value": 70,
+          "unit": "EUR",
+          "estimated": false,
+          "comparedCost": {
+            "lastYearValue": 47,
+            "period": {
+              "month": 5,
+              "year": 2022
+            },
+            "smiley": "HAPPY",
+            "comparedPercentage": 470,
+            "comparedValue": "20"
+          }
+        }
+      ]
+    }
+  ],
+  "co2Emissions": null,
+  "consumptionsBillingPeriods": {
+    "currentBillingPeriod": {
+      "timeRange": {
+        "start": {
+          "month": 7,
+          "year": 2022
+        },
+        "end": {
+          "month": 5,
+          "year": 2023
+        }
+      },
+      "readings": [
+        {
+          "type": "heating",
+          "value": "2646",
+          "unit": "Einheiten",
+          "additionalValue": "2876,0",
+          "additionalUnit": "kWh",
+          "estimated": false,
+          "comparedConsumption": {
+            "lastYearValue": 2648.0,
+            "period": null,
+            "smiley": "HAPPY",
+            "comparedPercentage": 0,
+            "comparedValue": "2"
+          },
+          "comparedCost": null,
+          "averageConsumption": null
+        },
+        {
+          "type": "warmwater",
+          "value": "11,1",
+          "unit": "m³",
+          "additionalValue": "642,0",
+          "additionalUnit": "kWh",
+          "estimated": false,
+          "comparedConsumption": {
+            "lastYearValue": 10.4,
+            "period": null,
+            "smiley": "MAD",
+            "comparedPercentage": 7,
+            "comparedValue": "0,7"
+          },
+          "comparedCost": null,
+          "averageConsumption": null
+        }
+      ],
+      "exception": null
+    },
+    "previousBillingPeriod": {
+      "timeRange": {
+        "start": {
+          "month": 7,
+          "year": 2021
+        },
+        "end": {
+          "month": 5,
+          "year": 2022
+        }
+      },
+      "readings": [
+        {
+          "type": "heating",
+          "value": "2648",
+          "unit": "Einheiten",
+          "additionalValue": "2878,2",
+          "additionalUnit": "kWh",
+          "estimated": false,
+          "comparedConsumption": null,
+          "comparedCost": null,
+          "averageConsumption": null
+        },
+        {
+          "type": "warmwater",
+          "value": "10,4",
+          "unit": "m³",
+          "additionalValue": "601,4",
+          "additionalUnit": "kWh",
+          "estimated": false,
+          "comparedConsumption": null,
+          "comparedCost": null,
+          "averageConsumption": null
+        }
+      ]
+    }
+  },
+  "costsBillingPeriods": {
+    "currentBillingPeriod": {
+      "timeRange": {
+        "start": {
+          "month": 7,
+          "year": 2022
+        },
+        "end": {
+          "month": 5,
+          "year": 2023
+        }
+      },
+      "readings": [
+        {
+          "type": "heating",
+          "value": "1567",
+          "unit": "EUR",
+          "additionalValue": null,
+          "additionalUnit": "kWh",
+          "estimated": false,
+          "comparedConsumption": null,
+          "comparedCost": {
+            "lastYearValue": 1568.0,
+            "period": null,
+            "smiley": "HAPPY",
+            "comparedPercentage": 0,
+            "comparedValue": "1"
+          },
+          "averageConsumption": null
+        },
+        {
+          "type": "warmwater",
+          "value": "77",
+          "unit": "EUR",
+          "additionalValue": null,
+          "additionalUnit": "kWh",
+          "estimated": false,
+          "comparedConsumption": null,
+          "comparedCost": {
+            "lastYearValue": 72.0,
+            "period": null,
+            "smiley": "MAD",
+            "comparedPercentage": 7,
+            "comparedValue": "5"
+          },
+          "averageConsumption": null
+        }
+      ],
+      "exception": null
+    },
+    "previousBillingPeriod": {
+      "timeRange": {
+        "start": {
+          "month": 7,
+          "year": 2021
+        },
+        "end": {
+          "month": 5,
+          "year": 2022
+        }
+      },
+      "readings": [
+        {
+          "type": "heating",
+          "value": "1568",
+          "unit": "EUR",
+          "additionalValue": null,
+          "additionalUnit": "kWh",
+          "estimated": false,
+          "comparedConsumption": null,
+          "comparedCost": null,
+          "averageConsumption": null
+        },
+        {
+          "type": "warmwater",
+          "value": "72",
+          "unit": "EUR",
+          "additionalValue": null,
+          "additionalUnit": "kWh",
+          "estimated": false,
+          "comparedConsumption": null,
+          "comparedCost": null,
+          "averageConsumption": null
+        }
+      ]
+    }
+  },
+  "co2EmissionsBillingPeriods": null
+}
