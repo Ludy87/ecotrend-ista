@@ -5,11 +5,7 @@ from typing import Final
 
 DOMAIN = "ecotrend_ista"
 MANUFACTURER: Final = "Ista"
-
 DEVICE_NAME: Final = "ista EcoTrend®"
-
-# DEMO_EMAIL = "demo@ista.de"
-# DEMO_PASSWORD = "Ausprobieren!"
 
 DATA_HASS_CONFIG: Final = "hass_config"
 
