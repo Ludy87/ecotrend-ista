@@ -32,7 +32,7 @@ jobs:
           cd ${{ github.workspace }}/custom_components/ecotrend_ista
           zip -r ecotrend_ista.zip ./
       - name: Upload zip to release
-        uses: svenstaro/upload-release-action@2.5.0
+        uses: svenstaro/upload-release-action@2.6.1
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ github.workspace }}/custom_components/ecotrend_ista/ecotrend_ista.zip
