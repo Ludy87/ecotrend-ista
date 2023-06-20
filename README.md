@@ -14,7 +14,7 @@
 [![Buy me a coffee](https://img.shields.io/static/v1.svg?label=Buy%20me%20a%20coffee&message=donate&style=for-the-badge&color=black&logo=buy%20me%20a%20coffee&logoColor=white&labelColor=orange)](https://www.buymeacoffee.com/ludy87)
 
 ---
-![ista EcoTrend V2](https://github.com/Ludy87/ecotrend-ista/blob/main/image/logo@2x_new.png?raw=true)
+![ista EcoTrend V2](https://github.com/Ludy87/ecotrend-ista/blob/main/image/logo_new@2x.png?raw=true)
 
 ## Installation
 
