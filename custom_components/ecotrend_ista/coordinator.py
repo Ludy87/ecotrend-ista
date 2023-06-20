@@ -3,20 +3,44 @@ from __future__ import annotations
 
 import asyncio
 import datetime
+import json
 import logging
+import os
 from datetime import timedelta
 
 from pyecotrend_ista.helper_object import CustomRaw
 from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
-from .config_flow import login_account
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from .config_flow import login_account
 from .const import CONF_UPDATE_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def create_directory_file(hass: HomeAssistant, consum_raw: CustomRaw, support_code: str):
+    paths = [
+        hass.config.path("www"),
+    ]
+
+    def mkdir() -> None:
+        for path in paths:
+            if not os.path.exists(path):
+                _LOGGER.debug("Creating directory: %s", path)
+                os.makedirs(path, exist_ok=True)
+
+    def make_file() -> None:
+        file_name = f"{DOMAIN}_{support_code}.json"
+        media_path = hass.config.path("www")
+        json_object = json.dumps(consum_raw.to_dict(), indent=4)
+        with open(f"{media_path}/{file_name}", mode="w", encoding="utf-8") as f_lie:
+            f_lie.write(json_object)
+
+    await hass.async_add_executor_job(mkdir)
+    await hass.async_add_executor_job(make_file)
 
 
 class IstaDataUpdateCoordinator(DataUpdateCoordinator):
@@ -57,6 +81,8 @@ class IstaDataUpdateCoordinator(DataUpdateCoordinator):
             consum_raw: CustomRaw = CustomRaw.from_dict(
                 await self.controller.consum_raw(select_year=[datetime.datetime.now().year])
             )
+
+            await create_directory_file(self.hass, consum_raw, self.controller.getSupportCode())
             self.data = consum_raw
             self.async_set_updated_data(self.data)
             return self.data
