@@ -14,5 +14,5 @@
         "pyecotrend_ista==2.0.14",
         "marshmallow-enum"
     ],
-    "version": "v2.0.2"
+    "version": "v2.0.3"
 }
