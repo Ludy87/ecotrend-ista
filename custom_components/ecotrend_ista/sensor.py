@@ -6,7 +6,7 @@ import logging
 from collections.abc import Callable
 from typing import Any, cast
 
-from pyecotrend_ista.helper_object import CustomRaw
+from pyecotrend_ista.helper_object_de import CustomRaw
 from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
 
 from homeassistant.components.sensor import RestoreSensor, SensorEntity
