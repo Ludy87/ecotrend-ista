@@ -9,7 +9,7 @@ import os
 from datetime import timedelta
 from typing import Any
 
-from pyecotrend_ista.helper_object import CustomRaw
+from pyecotrend_ista.helper_object_de import CustomRaw
 from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
 
 from homeassistant.config_entries import ConfigEntry
