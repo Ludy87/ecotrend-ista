@@ -7,6 +7,7 @@ import json
 import logging
 import os
 from datetime import timedelta
+from typing import Any
 
 from pyecotrend_ista.helper_object import CustomRaw
 from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
@@ -78,9 +79,10 @@ class IstaDataUpdateCoordinator(DataUpdateCoordinator):
         """Update the data from ista EcoTrend Version 2."""
         try:
             await self.init()
-            consum_raw: CustomRaw = CustomRaw.from_dict(
-                await self.controller.consum_raw(select_year=[datetime.datetime.now().year])
-            )
+            _consum_raw: dict[str, Any] = await self.controller.consum_raw(select_year=[datetime.datetime.now().year])
+            if not isinstance(_consum_raw, dict):
+                return self.data
+            consum_raw: CustomRaw = CustomRaw.from_dict(_consum_raw)
 
             await create_directory_file(self.hass, consum_raw, self.controller.getSupportCode())
             self.data = consum_raw
