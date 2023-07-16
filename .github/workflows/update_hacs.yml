@@ -1,0 +1,15 @@
+name: Daily Update
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v3.5.3
+      - uses: Ludy87/action/update_hacs_hassio@v1.0.3
