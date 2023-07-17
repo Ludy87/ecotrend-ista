@@ -1,9 +1,9 @@
 {
-  "name": "ista EcoTrend",
-  "zip_release": true,
-  "country": "DE",
-  "render_readme": true,
-  "homeassistant": "2022.6.0",
-  "hacs": "1.32.1",
-  "filename": "ecotrend_ista.zip"
+    "name": "ista EcoTrend",
+    "zip_release": true,
+    "country": "DE",
+    "render_readme": true,
+    "homeassistant": "2023.7.2",
+    "hacs": "1.32.1",
+    "filename": "ecotrend_ista.zip"
 }
