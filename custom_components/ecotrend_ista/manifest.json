@@ -8,11 +8,11 @@
     "dependencies": [],
     "documentation": "https://github.com/Ludy87/ecotrend-ista/tree/main",
     "integration_type": "device",
-    "iot_class": "local_polling",
+    "iot_class": "cloud_polling",
     "issue_tracker": "https://github.com/Ludy87/ecotrend-ista/issues",
     "requirements": [
         "pyecotrend_ista==2.0.19",
         "marshmallow-enum"
     ],
-    "version": "v2.0.8"
+    "version": "v2.1.0"
 }
