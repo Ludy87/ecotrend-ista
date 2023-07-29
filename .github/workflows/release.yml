@@ -44,7 +44,7 @@ jobs:
           zip -r ecotrend_ista.zip ./
       - name: Upload zip to release
         if: steps.checkTag.outputs.exists == 'false'
-        uses: svenstaro/upload-release-action@2.6.1
+        uses: svenstaro/upload-release-action@2.7.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ github.workspace }}/custom_components/ecotrend_ista/ecotrend_ista.zip
