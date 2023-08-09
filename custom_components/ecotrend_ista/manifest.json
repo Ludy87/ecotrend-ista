@@ -11,8 +11,8 @@
     "iot_class": "cloud_polling",
     "issue_tracker": "https://github.com/Ludy87/ecotrend-ista/issues",
     "requirements": [
-        "pyecotrend_ista==2.0.21",
+        "pyecotrend_ista==2.1.1",
         "marshmallow-enum"
     ],
-    "version": "v2.1.1"
+    "version": "v2.1.2"
 }
