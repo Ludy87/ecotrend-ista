@@ -43,6 +43,13 @@ ista EcoTrend should now appear as a card under the HA Integrations page with "C
 
 ---
 
+## Two-factor authentication (experimental)
+
+- [Two-factor authentication deutsch](TWO_FACTOR_AUTHENTICATION_DE.md)
+- [Two-factor authentication english](TWO_FACTOR_AUTHENTICATION_EN.md)
+
+---
+
 ## Debug
 
 ```yaml
@@ -50,5 +57,3 @@ logger:
   logs:
     custom_components.ecotrend_ista: debug
 ```
-
----
