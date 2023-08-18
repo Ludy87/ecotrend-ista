@@ -1,9 +1,9 @@
 """Support for reading status from ecotren-ists."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import datetime
 import logging
-from collections.abc import Callable
 from typing import Any, cast
 
 from pyecotrend_ista.helper_object_de import CustomRaw
@@ -11,12 +11,17 @@ from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
 
 from homeassistant.components.sensor import RestoreSensor, SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import __short_version__
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+if int(__short_version__.replace(".", "")) < 20239:
+    from homeassistant.helpers.entity import DeviceInfo
+else:
+    from homeassistant.helpers.device_registry import DeviceInfo  # Dev branch
 
 from .const import (
     CONF_TYPE_HEATING_CUSTOM,
@@ -68,6 +73,7 @@ class EcotrendBaseEntityV2(CoordinatorEntity[IstaDataUpdateCoordinator], Restore
             unsub()
             self._unsub_dispatchers.remove(unsub)
         _LOGGER.debug("When entity is remove on hass")
+        await self.hass.async_add_executor_job(self.coordinator.controller.logout)
         self._unsub_dispatchers = []
 
     async def update(self):
@@ -133,7 +139,9 @@ async def async_setup_entry(
     controller = coordinator.controller
 
     entities: list = []
-    consum_raw: CustomRaw = CustomRaw.from_dict(await controller.consum_raw(select_year=[datetime.datetime.now().year]))
+    consum_raw: CustomRaw = CustomRaw.from_dict(
+        await hass.async_add_executor_job(controller.consum_raw, [datetime.datetime.now().year])
+    )
     consum_dict = consum_raw.to_dict()
     last_value = consum_dict.get("last_value", None)
     last_custom_value = consum_dict.get("last_custom_value", None)
