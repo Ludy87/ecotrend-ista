@@ -19,6 +19,8 @@ CONF_YEARMONTH = "yearmonth"
 CONF_YEAR = "year"
 # Deprecated config
 
+CONF_MFA = "mfa_code"
+
 CONF_URL: Final = "URL"
 CONF_UPDATE_INTERVAL: Final = "update_interval"
 
