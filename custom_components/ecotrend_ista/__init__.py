@@ -1,4 +1,4 @@
-""" ista EcoTrend Version 2 """
+"""ista EcoTrend Version 2."""
 from __future__ import annotations
 
 import logging
