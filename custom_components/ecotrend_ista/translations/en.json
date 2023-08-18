@@ -7,7 +7,10 @@
         "error": {
             "cannot_connect": "Connection failed",
             "auth_inval": "Login failed. Incorrect email address, password, or login URL.",
-            "not_allowed": "The selected URL is not yet supported"
+            "not_allowed": "The selected URL is not yet supported",
+            "no_email": "Email Invalid",
+            "timeout_connect": "Timeout establishing connection",
+            "unknown": "Unexpected error"
         },
         "create_entry": {
             "default": "ista EcoTrend integration has been created!"
@@ -20,7 +23,8 @@
                     "email": "Email address",
                     "password": "Password",
                     "URL": "Login URL",
-                    "update_interval": "Update Interval (h)"
+                    "update_interval": "Update Interval (h)",
+                    "mfa_code": "Two-factor authentication"
                 }
             }
         }
