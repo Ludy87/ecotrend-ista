@@ -11,17 +11,12 @@ from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
 
 from homeassistant.components.sensor import RestoreSensor, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import __short_version__
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
-if int(__short_version__.replace(".", "")) < 20239:
-    from homeassistant.helpers.entity import DeviceInfo
-else:
-    from homeassistant.helpers.device_registry import DeviceInfo  # Dev branch
 
 from .const import (
     CONF_TYPE_HEATING_CUSTOM,
