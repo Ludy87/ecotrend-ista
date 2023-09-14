@@ -7,7 +7,10 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "auth_inval": "Login fehlgeschlagen. E-Mail-Adresse, Passwort oder Login-Url falsch.",
-            "not_allowed": "Die gewählte URL wird noch nicht unterstützt"
+            "not_allowed": "Die gewählte URL wird noch nicht unterstützt",
+            "no_email": "keine gültige Email",
+            "timeout_connect": "Zeitüberschreitung beim Verbindungsaufbau",
+            "unknown": "Unerwarteter Fehler"
         },
         "create_entry": {
             "default": "ista EcoTrend Integration wurde erstellt!"
@@ -20,7 +23,8 @@
                     "email": "E-Mail-Adresse",
                     "password": "Passwort",
                     "URL": "Login-Url",
-                    "update_interval": "Update Interval (h)"
+                    "update_interval": "Update Interval (h)",
+                    "mfa_code": "Zwei-Faktor Authentifizierung"
                 }
             }
         }

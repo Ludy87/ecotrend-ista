@@ -17,7 +17,16 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import CONF_UNIT, CONF_UNIT_HEATING, CONF_UNIT_WARMWATER, CONF_UPDATE_INTERVAL, CONF_URL, CONF_YEAR, CONF_YEARMONTH
+from .const import (
+    CONF_MFA,
+    CONF_UNIT,
+    CONF_UNIT_HEATING,
+    CONF_UNIT_WARMWATER,
+    CONF_UPDATE_INTERVAL,
+    CONF_URL,
+    CONF_YEAR,
+    CONF_YEARMONTH,
+)
 
 URL_SELECTORS = {
     "de_url": "https://ecotrend.ista.de/",
@@ -37,6 +46,7 @@ DATA_SCHEMA_EMAIL = {
     vol.Required(CONF_EMAIL): TextSelector(TextSelectorConfig(type=TextSelectorType.EMAIL, multiline=False)),
     vol.Required(CONF_PASSWORD): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD, multiline=False)),
     vol.Required(CONF_URL, default="de_url"): URL_SELECTOR,
+    vol.Optional(CONF_MFA, default=""): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)),
     vol.Required(CONF_UPDATE_INTERVAL, default=24): NumberSelector(
         NumberSelectorConfig(mode=NumberSelectorMode.SLIDER, min=1, max=24)
     ),

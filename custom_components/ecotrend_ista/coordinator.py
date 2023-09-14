@@ -1,16 +1,16 @@
-"""Coordinator for ista EcoTrend Version 2"""
+"""Coordinator for ista EcoTrend Version 2."""
 from __future__ import annotations
 
-import asyncio
 import datetime
+from datetime import timedelta
 import json
 import logging
 import os
-from datetime import timedelta
 from typing import Any
 
 from pyecotrend_ista.helper_object_de import CustomRaw
 from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
+import requests
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -23,17 +23,18 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def create_directory_file(hass: HomeAssistant, consum_raw: CustomRaw, support_code: str):
-    paths = [
-        hass.config.path("www"),
-    ]
+    """Create a directory and a file with JSON content."""
+    paths = [hass.config.path("www")]
 
     def mkdir() -> None:
+        """Create directories if they do not exist."""
         for path in paths:
             if not os.path.exists(path):
                 _LOGGER.debug("Creating directory: %s", path)
                 os.makedirs(path, exist_ok=True)
 
     def make_file() -> None:
+        """Create a JSON file with the data."""
         file_name = f"{DOMAIN}_{support_code}.json"
         media_path = hass.config.path("www")
         json_object = json.dumps(consum_raw.to_dict(), indent=4)
@@ -60,9 +61,8 @@ class IstaDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(hours=self._entry.options.get(CONF_UPDATE_INTERVAL, 24)),
         )
 
-    async def set_controller(self) -> None:
-        """
-        Set up the PyEcotrendIsta controller.
+    def set_controller(self) -> None:
+        """Set up the PyEcotrendIsta controller.
 
         This method initializes the PyEcotrendIsta controller instance with the provided email, password,
         and other necessary configurations.
@@ -72,14 +72,16 @@ class IstaDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def init(self) -> None:
         """Initialize the controller and perform the login."""
-        await self.set_controller()
-        await self.controller.login()
+        self.set_controller()
+        await self.hass.async_add_executor_job(self.controller.login)
 
     async def _async_update_data(self):
         """Update the data from ista EcoTrend Version 2."""
         try:
             await self.init()
-            _consum_raw: dict[str, Any] = await self.controller.consum_raw(select_year=[datetime.datetime.now().year])
+            _consum_raw: dict[str, Any] = await self.hass.async_add_executor_job(
+                self.controller.consum_raw, [datetime.datetime.now().year]
+            )
             if not isinstance(_consum_raw, dict):
                 return self.data
             consum_raw: CustomRaw = CustomRaw.from_dict(_consum_raw)
@@ -88,5 +90,5 @@ class IstaDataUpdateCoordinator(DataUpdateCoordinator):
             self.data = consum_raw
             self.async_set_updated_data(self.data)
             return self.data
-        except asyncio.TimeoutError:
+        except requests.Timeout:
             pass

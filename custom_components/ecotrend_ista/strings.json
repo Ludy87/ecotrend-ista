@@ -7,7 +7,10 @@
         },
         "error": {
             "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-            "auth_inval": "[%key:common::config_flow::error::auth_inval%]"
+            "auth_inval": "[%key:common::config_flow::error::auth_inval%]",
+            "no_email": "[%key:common::config_flow::error::no_email%]",
+            "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
         },
         "create_entry": {
             "default": "[%key:common::config_flow::create_entry::default%]"
@@ -34,7 +37,8 @@
                 "data": {
                     "email": "[%key:common::config_flow::data::email%]",
                     "password": "[%key:common::config_flow::data::password%]",
-                    "URL": "[%key:common::config_flow::data::URL%]"
+                    "URL": "[%key:common::config_flow::data::URL%]",
+                    "mfa_code": "[%key:common::config_flow::data::mfa_code%]"
                 }
             }
         }
