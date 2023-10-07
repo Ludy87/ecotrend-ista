@@ -1,60 +1,60 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "[%key:common::config_flow::abort::already_configured%]",
-            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-            "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]"
-        },
-        "error": {
-            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-            "auth_inval": "[%key:common::config_flow::error::auth_inval%]",
-            "no_email": "[%key:common::config_flow::error::no_email%]",
-            "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
-            "unknown": "[%key:common::config_flow::error::unknown%]"
-        },
-        "create_entry": {
-            "default": "[%key:common::config_flow::create_entry::default%]"
-        },
-        "step": {
-            "user": {
-                "title": "[%key:common::config_flow::user::title%]",
-                "menu_options": {
-                    "german": "https://www.ecotrend.ista.de/",
-                    "netherland": "https://mijn.ista.nl/",
-                    "francais": "https://ma-consommation.ista.lu/",
-                    "denmark": ""
-                },
-                "description": "[%key:common::config_flow::german::description%]",
-                "data": {
-                    "email": "[%key:common::config_flow::data::email%]",
-                    "password": "[%key:common::config_flow::data::password%]",
-                    "URL": "[%key:common::config_flow::data::URL%]"
-                }
-            },
-            "german": {
-                "title": "[%key:common::config_flow::german::title%]",
-                "description": "[%key:common::config_flow::german::description%]",
-                "data": {
-                    "email": "[%key:common::config_flow::data::email%]",
-                    "password": "[%key:common::config_flow::data::password%]",
-                    "URL": "[%key:common::config_flow::data::URL%]",
-                    "mfa_code": "[%key:common::config_flow::data::mfa_code%]"
-                }
-            }
-        }
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
-    "options": {
-        "error": {
-            "not_allowed": "Die gewählte URL ist nicht erlaubt"
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::default%]"
+    },
+    "error": {
+      "auth_inval": "[%key:common::config_flow::error::auth_inval%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_email": "[%key:common::config_flow::error::no_email%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "german": {
+        "data": {
+          "URL": "[%key:common::config_flow::data::URL%]",
+          "email": "[%key:common::config_flow::data::email%]",
+          "mfa_code": "[%key:common::config_flow::data::mfa_code%]",
+          "password": "[%key:common::config_flow::data::password%]"
         },
-        "step": {
-            "init": {
-                "title": "Einstellungen für ista EcoTrend",
-                "data": {
-                    "URL": "Login-Url",
-                    "update_interval": "Update Interval (h)"
-                }
-            }
-        }
+        "description": "[%key:common::config_flow::german::description%]",
+        "title": "[%key:common::config_flow::german::title%]"
+      },
+      "user": {
+        "data": {
+          "URL": "[%key:common::config_flow::data::URL%]",
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "[%key:common::config_flow::german::description%]",
+        "menu_options": {
+          "denmark": "",
+          "francais": "https://ma-consommation.ista.lu/",
+          "german": "https://www.ecotrend.ista.de/",
+          "netherland": "https://mijn.ista.nl/"
+        },
+        "title": "[%key:common::config_flow::user::title%]"
+      }
     }
+  },
+  "options": {
+    "error": {
+      "not_allowed": "Die gewählte URL ist nicht erlaubt"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "URL": "Login-Url",
+          "update_interval": "Update Interval (h)"
+        },
+        "title": "Einstellungen für ista EcoTrend"
+      }
+    }
+  }
 }

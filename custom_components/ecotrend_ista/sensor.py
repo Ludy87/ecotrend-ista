@@ -29,7 +29,7 @@ from .const import (
 )
 from .const_schema import URL_SELECTORS
 from .coordinator import IstaDataUpdateCoordinator
-from .entitys import SENSOR_TYPES, EcotrendSensorEntityDescription
+from .entity import SENSOR_TYPES, EcotrendSensorEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,9 +105,9 @@ class EcotrendSensorV2(EcotrendBaseEntityV2, SensorEntity):
 
         # pylint: disable=logging-fstring-interpolation
         if hasattr(self, "_attr_native_unit_of_measurement"):
-            _LOGGER.debug(f"{description.data_type} {self.consum_value} {self._attr_native_unit_of_measurement}")
+            _LOGGER.debug(f"{description.data_type} {self.consum_value} {self._attr_native_unit_of_measurement}")  # noqa: G004
         elif hasattr(self, "unit_of_measurement"):
-            _LOGGER.debug(f"{description.data_type} {self.consum_value} {self.unit_of_measurement}")
+            _LOGGER.debug(f"{description.data_type} {self.consum_value} {self.unit_of_measurement}")  # noqa: G004
 
     @property
     def native_value(self) -> StateType:
