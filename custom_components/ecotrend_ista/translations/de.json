@@ -1,46 +1,46 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Integration wurde bereits konfiguriert",
-            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
-        },
-        "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen",
-            "auth_inval": "Login fehlgeschlagen. E-Mail-Adresse, Passwort oder Login-Url falsch.",
-            "not_allowed": "Die gewählte URL wird noch nicht unterstützt",
-            "no_email": "keine gültige Email",
-            "timeout_connect": "Zeitüberschreitung beim Verbindungsaufbau",
-            "unknown": "Unerwarteter Fehler"
-        },
-        "create_entry": {
-            "default": "ista EcoTrend Integration wurde erstellt!"
-        },
-        "step": {
-            "german": {
-                "title": "ista EcoTrend einrichten",
-                "description": "Kontoauthentifizierung",
-                "data": {
-                    "email": "E-Mail-Adresse",
-                    "password": "Passwort",
-                    "URL": "Login-Url",
-                    "update_interval": "Update Interval (h)",
-                    "mfa_code": "Zwei-Faktor Authentifizierung"
-                }
-            }
-        }
+  "config": {
+    "abort": {
+      "already_configured": "Integration wurde bereits konfiguriert",
+      "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration möglich."
     },
-    "options": {
-        "error": {
-            "not_allowed": "Die gewählte Url wird noch nicht unterstützt"
+    "create_entry": {
+      "default": "ista EcoTrend Integration wurde erstellt!"
+    },
+    "error": {
+      "auth_inval": "Login fehlgeschlagen. E-Mail-Adresse, Passwort oder Login-Url falsch.",
+      "cannot_connect": "Verbindung fehlgeschlagen",
+      "no_email": "keine gültige Email",
+      "not_allowed": "Die gewählte URL wird noch nicht unterstützt",
+      "timeout_connect": "Zeitüberschreitung beim Verbindungsaufbau",
+      "unknown": "Unerwarteter Fehler"
+    },
+    "step": {
+      "german": {
+        "data": {
+          "URL": "Login-Url",
+          "email": "E-Mail-Adresse",
+          "mfa_code": "Zwei-Faktor Authentifizierung",
+          "password": "Passwort",
+          "update_interval": "Update Interval (h)"
         },
-        "step": {
-            "init": {
-                "title": "Einstellungen für ista EcoTrend",
-                "data": {
-                    "URL": "Login-Url",
-                    "update_interval": "Update Interval (h)"
-                }
-            }
-        }
+        "description": "Kontoauthentifizierung",
+        "title": "ista EcoTrend einrichten"
+      }
     }
+  },
+  "options": {
+    "error": {
+      "not_allowed": "Die gewählte Url wird noch nicht unterstützt"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "URL": "Login-Url",
+          "update_interval": "Update Interval (h)"
+        },
+        "title": "Einstellungen für ista EcoTrend"
+      }
+    }
+  }
 }

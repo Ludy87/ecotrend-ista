@@ -1,46 +1,46 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Integration has already been configured",
-            "single_instance_allowed": "Already configured. Only a single configuration is allowed."
-        },
-        "error": {
-            "cannot_connect": "Connection failed",
-            "auth_inval": "Login failed. Incorrect email address, password, or login URL.",
-            "not_allowed": "The selected URL is not yet supported",
-            "no_email": "Email Invalid",
-            "timeout_connect": "Timeout establishing connection",
-            "unknown": "Unexpected error"
-        },
-        "create_entry": {
-            "default": "ista EcoTrend integration has been created!"
-        },
-        "step": {
-            "german": {
-                "title": "Set up ista EcoTrend",
-                "description": "Account authentication",
-                "data": {
-                    "email": "Email address",
-                    "password": "Password",
-                    "URL": "Login URL",
-                    "update_interval": "Update Interval (h)",
-                    "mfa_code": "Two-factor authentication"
-                }
-            }
-        }
+  "config": {
+    "abort": {
+      "already_configured": "Integration has already been configured",
+      "single_instance_allowed": "Already configured. Only a single configuration is allowed."
     },
-    "options": {
-        "error": {
-            "not_allowed": "The selected URL is not yet supported"
+    "create_entry": {
+      "default": "ista EcoTrend integration has been created!"
+    },
+    "error": {
+      "auth_inval": "Login failed. Incorrect email address, password, or login URL.",
+      "cannot_connect": "Connection failed",
+      "no_email": "Email Invalid",
+      "not_allowed": "The selected URL is not yet supported",
+      "timeout_connect": "Timeout establishing connection",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "german": {
+        "data": {
+          "URL": "Login URL",
+          "email": "Email address",
+          "mfa_code": "Two-factor authentication",
+          "password": "Password",
+          "update_interval": "Update Interval (h)"
         },
-        "step": {
-            "init": {
-                "title": "Settings for ista EcoTrend",
-                "data": {
-                    "URL": "Login URL",
-                    "update_interval": "Update Interval (h)"
-                }
-            }
-        }
+        "description": "Account authentication",
+        "title": "Set up ista EcoTrend"
+      }
     }
+  },
+  "options": {
+    "error": {
+      "not_allowed": "The selected URL is not yet supported"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "URL": "Login URL",
+          "update_interval": "Update Interval (h)"
+        },
+        "title": "Settings for ista EcoTrend"
+      }
+    }
+  }
 }
