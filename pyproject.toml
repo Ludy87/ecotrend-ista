@@ -75,7 +75,7 @@ ignore = [
     "D213",  # Multi-line docstring summary should start at the second line
     "D406",  # Section name should end with a newline
     "D407",  # Section name underlining
-    "D417",  # 
+    "D417",  #
     "E501",  # line too long
     "E731",  # do not assign a lambda expression, use a def
     "PLC1901", # Lots of false positives
