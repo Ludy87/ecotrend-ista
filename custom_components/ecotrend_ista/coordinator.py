@@ -8,12 +8,13 @@ import logging
 import os
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from pyecotrend_ista.helper_object_de import CustomRaw
 from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
 import requests
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .config_flow import login_account
 from .const import CONF_UPDATE_INTERVAL, DOMAIN
@@ -67,7 +68,11 @@ class IstaDataUpdateCoordinator(DataUpdateCoordinator):
         and other necessary configurations.
         """
         data = self._entry.data
-        self.controller = login_account(self.hass, data, self._entry.options.get("dev_demo", False))
+        self.controller = login_account(
+            self.hass,
+            data,
+            self._entry.options.get("dev_demo", False),
+        )
 
     async def init(self) -> None:
         """Initialize the controller and perform the login."""
@@ -79,13 +84,21 @@ class IstaDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             await self.init()
             _consum_raw: dict[str, Any] = await self.hass.async_add_executor_job(
-                self.controller.consum_raw, [datetime.datetime.now().year]
+                self.controller.consum_raw,
+                [
+                    datetime.datetime.now().year,
+                    datetime.datetime.now().year - 1,
+                ],
             )
             if not isinstance(_consum_raw, dict):
                 return self.data
             consum_raw: CustomRaw = CustomRaw.from_dict(_consum_raw)
 
-            await create_directory_file(self.hass, consum_raw, self.controller.getSupportCode())
+            await create_directory_file(
+                self.hass,
+                consum_raw,
+                self.controller.getSupportCode(),
+            )
             self.data = consum_raw
             self.async_set_updated_data(self.data)
             return self.data

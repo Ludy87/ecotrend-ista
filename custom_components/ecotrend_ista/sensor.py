@@ -6,6 +6,9 @@ import datetime
 import logging
 from typing import Any, cast
 
+from pyecotrend_ista.helper_object_de import CustomRaw
+from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
+
 from homeassistant.components.sensor import RestoreSensor, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -14,8 +17,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from pyecotrend_ista.helper_object_de import CustomRaw
-from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
 
 from .const import (
     CONF_TYPE_HEATING_CUSTOM,
@@ -134,7 +135,13 @@ async def async_setup_entry(
 
     entities: list = []
     consum_raw: CustomRaw = CustomRaw.from_dict(
-        await hass.async_add_executor_job(controller.consum_raw, [datetime.datetime.now().year])
+        await hass.async_add_executor_job(
+            controller.consum_raw,
+            [
+                datetime.datetime.now().year,
+                datetime.datetime.now().year - 1,
+            ],
+        )
     )
     consum_dict = consum_raw.to_dict()
     last_value = consum_dict.get("last_value", None)

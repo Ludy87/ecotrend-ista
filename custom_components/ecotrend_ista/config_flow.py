@@ -3,7 +3,13 @@ from __future__ import annotations
 
 import copy
 import logging
+from types import MappingProxyType
 from typing import Any
+
+from pyecotrend_ista.exception_classes import LoginError
+from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
+import requests
+import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -13,10 +19,6 @@ from homeassistant.helpers.selector import (
     NumberSelectorConfig,
     NumberSelectorMode,
 )
-from pyecotrend_ista.exception_classes import LoginError
-from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
-import requests
-import voluptuous as vol
 
 from .const import CONF_MFA, CONF_UPDATE_INTERVAL, CONF_URL, DOMAIN, MANUFACTURER
 from .const_schema import DATA_SCHEMA_EMAIL, URL_SELECTOR
@@ -26,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @staticmethod
 @core.callback
-def login_account(hass: core.HomeAssistant, data: dict, demo: bool = False) -> PyEcotrendIsta:
+def login_account(hass: core.HomeAssistant, data: MappingProxyType[str, Any], demo: bool = False) -> PyEcotrendIsta:
     """Log into an Ecotrend-Ista account and return an account instance."""
     account = PyEcotrendIsta(
         email=data.get(CONF_EMAIL, None),
