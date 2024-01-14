@@ -134,7 +134,13 @@ async def async_setup_entry(
 
     entities: list = []
     consum_raw: CustomRaw = CustomRaw.from_dict(
-        await hass.async_add_executor_job(controller.consum_raw, [datetime.datetime.now().year])
+        await hass.async_add_executor_job(
+            controller.consum_raw,
+            [
+                datetime.datetime.now().year,
+                datetime.datetime.now().year - 1,
+            ],
+        )
     )
     consum_dict = consum_raw.to_dict()
     last_value = consum_dict.get("last_value", None)

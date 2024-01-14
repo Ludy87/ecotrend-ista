@@ -1,11 +1,11 @@
-import json
+import json  # noqa: D100
 import sys
 
 
-def main():
+def main():  # noqa: D103
     with open("./custom_components/ecotrend_ista/manifest.json") as json_file:
         data = json.load(json_file)
-        print(data["version"])
+        print(data["version"])  # noqa: T201
     return 0
 
 
