@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import logging
+from types import MappingProxyType
 from typing import Any
 
 from homeassistant import config_entries, core
@@ -26,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @staticmethod
 @core.callback
-def login_account(hass: core.HomeAssistant, data: dict, demo: bool = False) -> PyEcotrendIsta:
+def login_account(hass: core.HomeAssistant, data: MappingProxyType[str, Any], demo: bool = False) -> PyEcotrendIsta:
     """Log into an Ecotrend-Ista account and return an account instance."""
     account = PyEcotrendIsta(
         email=data.get(CONF_EMAIL, None),
