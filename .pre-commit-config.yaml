@@ -45,6 +45,8 @@ repos:
           - --skip="./.*,*.csv,*.json,*.ambr"
           - --quiet-level=2
         exclude_types: [csv, json]
+        additional_dependencies:
+          - tomli
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
@@ -67,6 +69,7 @@ repos:
         exclude_types: [png,yaml]
         exclude: (\.md|\.yml)$
       - id: trailing-whitespace
+        exclude_types: [json]
       - id: pretty-format-json
         args: [--autofix,--no-ensure-ascii]
         exclude: ^(hacs|custom_components/ecotrend_ista/manifest)\.json$

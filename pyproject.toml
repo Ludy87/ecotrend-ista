@@ -1,11 +1,6 @@
-[tool.pylint.TYPING]
-runtime-typing = false
-
-[tool.pylint.CODE_STYLE]
-max-line-length-suggestions = 127
-
 [tool.ruff]
 target-version = "py311"
+line-length = 127
 
 select = [
     "B002", # Python does not support the unary prefix increment
@@ -21,7 +16,7 @@ select = [
     "G", # flake8-logging-format
     "I",  # isort
     "ICN001", # import concentions; {name} should be imported as {asname}
-    "ISC001", # Implicitly concatenated string literals on one line
+    # "ISC001", # Implicitly concatenated string literals on one line
     "N804", # First argument of a class method should be named cls
     "N805", # First argument of a method should be named self
     "N815", # Variable {name} in class scope should not be mixedCase
@@ -76,7 +71,7 @@ ignore = [
     "D406",  # Section name should end with a newline
     "D407",  # Section name underlining
     "D417",  #
-    "E501",  # line too long
+    # "E501",  # line too long
     "E731",  # do not assign a lambda expression, use a def
     "PLC1901", # Lots of false positives
     # False positives https://github.com/astral-sh/ruff/issues/5386
@@ -91,18 +86,14 @@ ignore = [
     "UP007", # keep type annotation style as is
     # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
     "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
-
 ]
-
-[tool.flake8]
-max-line-length = 127
 
 [tool.ruff.flake8-pytest-style]
 fixture-parentheses = false
 
 [tool.ruff.isort]
-force-sort-within-sections = true
-combine-as-imports = true
+# force-sort-within-sections = true
+# combine-as-imports = true
 
 [tool.ruff.per-file-ignores]
 
@@ -119,5 +110,40 @@ max-doc-length = 127
 [tool.ruff.pydocstyle]
 convention = "google"
 
+[tool.ruff.flake8-import-conventions.extend-aliases]
+voluptuous = "vol"
+"homeassistant.helpers.config_validation" = "cv"
+"homeassistant.helpers.entity_registry" = "er"
+
+[tool.isort]
+profile = "black"
+combine-as-imports = true
+split-on-trailing-comma = false
+line_length = 127
+
+[tool.flake8]
+max-line-length = 127
+
 [tool.pylint]
 max-line-length=127
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = [
+    "too-many-ancestors",  # R0901
+    "too-many-arguments",  # R0913
+    "E0705",
+    "bad-exception-cause",
+    "W0223",
+]
+
+[tool.pylint.FORMAT]
+expected-line-ending-format = "LF"
+
+[tool.pylint.CODE_STYLE]
+max-line-length-suggestions = 127
+
+[tool.mypy]
+check_untyped_defs = true
+
+[tool.pylint.TYPING]
+runtime-typing = false
