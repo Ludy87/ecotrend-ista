@@ -71,3 +71,6 @@
   color: "FDF89E"
 - name: "New Version"
   color: "ff0000"
+- name: "API"
+  description: "API change required"
+  color: "ff0000"
