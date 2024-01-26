@@ -1,9 +1,9 @@
 """Support for reading status from ecotren-ists."""
 from __future__ import annotations
 
-from collections.abc import Callable
 import datetime
 import logging
+from collections.abc import Callable
 from typing import Any, cast
 
 from homeassistant.components.sensor import RestoreSensor, SensorEntity
