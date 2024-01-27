@@ -58,6 +58,8 @@
 - name: "Version 1"
   color: "ff0000"
 - name: "Version 2"
+  color: "ff0000"
+- name: "Version 3"
   color: "5319e7"
 - name: "solved"
   color: "0366d6"

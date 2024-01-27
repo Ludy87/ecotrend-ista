@@ -5,7 +5,7 @@ Bug:
     label:
       - 'check for Bug'
       - 'wait'
-      - 'Version 2'
+      - 'Version 3'
     comment: >
       :wave: @{issue-author}, it is checked whether there is a bug.
       Please have some patience.
@@ -17,7 +17,7 @@ Bug:
     label:
       - 'in progress'
       - 'wait'
-      - 'Version 2'
+      - 'Version 3'
     unlabel:
       - 'check for Bug'
     comment: >
@@ -29,7 +29,7 @@ Bug:
   issues:
     label:
       - 'wait'
-      - 'Version 2'
+      - 'Version 3'
     comment: >
       :wave: @{issue-author}, your proposal will be considered.
       Please have some patience.

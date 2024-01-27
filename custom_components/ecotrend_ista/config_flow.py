@@ -8,6 +8,7 @@ from typing import Any
 
 import requests
 import voluptuous as vol
+
 from pyecotrend_ista.exception_classes import LoginError
 from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
 
