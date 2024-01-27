@@ -1,4 +1,4 @@
-"""Const schema for ista EcoTrend Version 2."""
+"""Const schema for ista EcoTrend Version 3."""
 from __future__ import annotations
 
 import voluptuous as vol

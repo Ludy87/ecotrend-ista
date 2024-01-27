@@ -1,4 +1,4 @@
-"""ista EcoTrend Version 2."""
+"""ista EcoTrend Version 3."""
 from __future__ import annotations
 
 import logging
@@ -7,7 +7,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_HASS_CONFIG, DOMAIN
@@ -26,8 +27,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
-    """Set up the ista EcoTrend Version 2 component."""
-    _LOGGER.debug("Set up the ista EcoTrend Version 2 component")
+    """Set up the ista EcoTrend Version 3 component."""
+    _LOGGER.debug("Set up the ista EcoTrend Version 3 component")
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][DATA_HASS_CONFIG] = hass_config
     if DOMAIN in hass_config:
@@ -49,6 +50,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Configure based on config entry %s", entry.entry_id)
     coordinator = IstaDataUpdateCoordinator(hass, entry)
     await coordinator.init()
+    for uuid in coordinator.controller.getUUIDs():
+        await _async_migrate_entries(
+            hass,
+            entry,
+            uuid,
+            coordinator.controller.getSupportCode(),
+        )
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
@@ -73,5 +81,37 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Handle options update."""
-    _LOGGER.debug("Configuration options updated, reloading ista EcoTrend 2 integration")
+    _LOGGER.debug("Configuration options updated, reloading ista EcoTrend 3 integration")
     await hass.config_entries.async_reload(config_entry.entry_id)
+
+
+async def _async_migrate_entries(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    new_uid: str,
+    support_code: str,
+) -> bool:
+    """Migrate old entry."""
+    entity_registry = er.async_get(hass)
+
+    @callback
+    def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
+        if support_code in str(entry.unique_id):
+            # heating_custom_{support_code} old
+            # heating_custom_{new_uid} new
+            new_unique_id = str(entry.unique_id).replace(support_code, new_uid).replace("-", "_").replace(" ", "_").lower()
+            _LOGGER.debug(
+                "change unique_id - entity: '%s' unique_id from '%s' to '%s'",
+                entry.entity_id,
+                entry.unique_id,
+                new_unique_id,
+            )
+            if existing_entity_id := entity_registry.async_get_entity_id(entry.domain, entry.platform, new_unique_id):
+                _LOGGER.debug("Cannot change unique_id to '%s', already exists for '%s'", new_unique_id, existing_entity_id)
+                return None
+            return {"new_unique_id": new_unique_id}
+        return None
+
+    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+
+    return True

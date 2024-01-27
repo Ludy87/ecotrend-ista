@@ -1,4 +1,4 @@
-"""Const for ista EcoTrend Version 2."""
+"""Const for ista EcoTrend Version 3."""
 from __future__ import annotations
 
 from typing import Final

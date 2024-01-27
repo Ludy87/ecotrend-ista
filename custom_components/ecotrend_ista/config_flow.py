@@ -1,4 +1,4 @@
-"""Config flow for ista EcoTrend Version 2."""
+"""Config flow for ista EcoTrend Version 3."""
 from __future__ import annotations
 
 import copy
@@ -81,7 +81,7 @@ class NotSupportedURL(Exception):
 
 
 class IstaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for ista EcoTrend Version 2."""
+    """Handle a config flow for ista EcoTrend Version 3."""
 
     VERSION = 1
 
@@ -145,7 +145,7 @@ class IstaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(self, import_data: dict[str, Any]):
-        """Import ista EcoTrend Version 2 config from configuration.yaml."""
+        """Import ista EcoTrend Version 3 config from configuration.yaml."""
 
         _import_data = copy.deepcopy(import_data)
         _import_data[CONF_PASSWORD] = "*****"
