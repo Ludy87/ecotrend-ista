@@ -8,10 +8,6 @@ from typing import Any
 
 import requests
 import voluptuous as vol
-
-from pyecotrend_ista.exception_classes import LoginError
-from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
-
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
@@ -20,6 +16,8 @@ from homeassistant.helpers.selector import (
     NumberSelectorConfig,
     NumberSelectorMode,
 )
+from pyecotrend_ista.exception_classes import LoginError
+from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
 
 from .const import CONF_MFA, CONF_UPDATE_INTERVAL, CONF_URL, DOMAIN, MANUFACTURER
 from .const_schema import DATA_SCHEMA_EMAIL, URL_SELECTOR
