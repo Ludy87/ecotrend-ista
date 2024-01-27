@@ -20,8 +20,6 @@ jobs:
         uses: actions/setup-python@v5.0.0
         with:
           python-version: |
-            3.9
-            3.10
             3.11
           check-latest: true
       - name: Get Version
@@ -51,3 +49,4 @@ jobs:
           asset_name: ecotrend_ista.zip
           tag: ${{ steps.version.outputs.version }}
           overwrite: true
+          prerelease: ${{ contains(steps.version.outputs.version, 'beta') }}
