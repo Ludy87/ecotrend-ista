@@ -1,4 +1,4 @@
-# ista EcoTrend Version 2
+# ista EcoTrend Version 3
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://img.shields.io/badge/My-HACS:%20REPOSITORY-000000.svg?&style=for-the-badge&logo=home-assistant&logoColor=white&color=049cdb)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Ludy87&repository=ecotrend-ista&category=integration)
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge&logo=home-assistant&logoColor=white)](https://github.com/hacs/integration)
@@ -14,7 +14,7 @@
 [![Buy me a coffee](https://img.shields.io/static/v1.svg?label=Buy%20me%20a%20coffee&message=donate&style=for-the-badge&color=black&logo=buy%20me%20a%20coffee&logoColor=white&labelColor=orange)](https://www.buymeacoffee.com/ludy87)
 
 ---
-![ista EcoTrend V2](https://github.com/Ludy87/ecotrend-ista/blob/main/image/logo_new@2x.png?raw=true)
+![ista EcoTrend V3](https://github.com/Ludy87/ecotrend-ista/blob/main/image/logo_new@2x.png?raw=true)
 
 ## Installation
 

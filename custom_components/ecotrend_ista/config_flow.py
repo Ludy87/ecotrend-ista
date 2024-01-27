@@ -1,10 +1,15 @@
-"""Config flow for ista EcoTrend Version 2."""
+"""Config flow for ista EcoTrend Version 3."""
 from __future__ import annotations
 
 import copy
 import logging
 from types import MappingProxyType
 from typing import Any
+
+import requests
+import voluptuous as vol
+from pyecotrend_ista.exception_classes import LoginError
+from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -14,10 +19,6 @@ from homeassistant.helpers.selector import (
     NumberSelectorConfig,
     NumberSelectorMode,
 )
-from pyecotrend_ista.exception_classes import LoginError
-from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
-import requests
-import voluptuous as vol
 
 from .const import CONF_MFA, CONF_UPDATE_INTERVAL, CONF_URL, DOMAIN, MANUFACTURER
 from .const_schema import DATA_SCHEMA_EMAIL, URL_SELECTOR
@@ -81,7 +82,7 @@ class NotSupportedURL(Exception):
 
 
 class IstaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for ista EcoTrend Version 2."""
+    """Handle a config flow for ista EcoTrend Version 3."""
 
     VERSION = 1
 
@@ -145,7 +146,7 @@ class IstaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(self, import_data: dict[str, Any]):
-        """Import ista EcoTrend Version 2 config from configuration.yaml."""
+        """Import ista EcoTrend Version 3 config from configuration.yaml."""
 
         _import_data = copy.deepcopy(import_data)
         _import_data[CONF_PASSWORD] = "*****"

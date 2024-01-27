@@ -1,19 +1,20 @@
-"""Coordinator for ista EcoTrend Version 2."""
+"""Coordinator for ista EcoTrend Version 3."""
 from __future__ import annotations
 
 import datetime
-from datetime import timedelta
 import json
 import logging
 import os
+from datetime import timedelta
 from typing import Any
+
+import requests
+from pyecotrend_ista.helper_object_de import CustomRaw
+from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from pyecotrend_ista.helper_object_de import CustomRaw
-from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
-import requests
 
 from .config_flow import login_account
 from .const import CONF_UPDATE_INTERVAL, DOMAIN
@@ -45,12 +46,12 @@ async def create_directory_file(hass: HomeAssistant, consum_raw: CustomRaw, supp
 
 
 class IstaDataUpdateCoordinator(DataUpdateCoordinator):
-    """Coordinator for ista EcoTrend Version 2."""
+    """Coordinator for ista EcoTrend Version 3."""
 
     controller: PyEcotrendIsta
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Initialize ista EcoTrend Version 2 data updater."""
+        """Initialize ista EcoTrend Version 3 data updater."""
         self._entry = entry
         super().__init__(
             hass=hass,
@@ -79,26 +80,32 @@ class IstaDataUpdateCoordinator(DataUpdateCoordinator):
         await self.hass.async_add_executor_job(self.controller.login)
 
     async def _async_update_data(self):
-        """Update the data from ista EcoTrend Version 2."""
+        """Update the data from ista EcoTrend Version 3."""
         try:
+            if self.data is None:
+                self.data = {}
             await self.init()
-            _consum_raw: dict[str, Any] = await self.hass.async_add_executor_job(
-                self.controller.consum_raw,
-                [
-                    datetime.datetime.now().year,
-                    datetime.datetime.now().year - 1,
-                ],
-            )
-            if not isinstance(_consum_raw, dict):
-                return self.data
-            consum_raw: CustomRaw = CustomRaw.from_dict(_consum_raw)
+            for uuid in self.controller.getUUIDs():
+                _consum_raw: dict[str, Any] = await self.hass.async_add_executor_job(
+                    self.controller.consum_raw,
+                    [
+                        datetime.datetime.now().year,
+                        datetime.datetime.now().year - 1,
+                    ],
+                    None,
+                    True,
+                    uuid,
+                )
+                if not isinstance(_consum_raw, dict):
+                    return self.data[uuid]
+                consum_raw: CustomRaw = CustomRaw.from_dict(_consum_raw)
 
-            await create_directory_file(
-                self.hass,
-                consum_raw,
-                self.controller.getSupportCode(),
-            )
-            self.data = consum_raw
+                await create_directory_file(
+                    self.hass,
+                    consum_raw,
+                    self.controller.getSupportCode(),
+                )
+                self.data[uuid] = consum_raw
             self.async_set_updated_data(self.data)
             return self.data
         except requests.Timeout:
