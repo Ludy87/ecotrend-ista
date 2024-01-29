@@ -1,4 +1,5 @@
 """Config flow for ista EcoTrend Version 3."""
+
 from __future__ import annotations
 
 import copy

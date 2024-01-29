@@ -1,4 +1,5 @@
 """Const for ista EcoTrend Version 3."""
+
 from __future__ import annotations
 
 from typing import Final
