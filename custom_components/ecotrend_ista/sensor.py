@@ -1,4 +1,5 @@
 """Support for reading status from ecotren-ists."""
+
 from __future__ import annotations
 
 import datetime

@@ -1,4 +1,5 @@
 """Entity definitions for Ecotrend sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
