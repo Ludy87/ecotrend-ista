@@ -1,16 +1,16 @@
 name: Lock Inactive Threads
 
 on:
-    schedule:
-        - cron: '0 5 * * *'
-    workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * *"
+  workflow_dispatch:
 
 permissions:
-    issues: write
-    pull-requests: write
+  issues: write
+  pull-requests: write
 
 concurrency:
-    group: lock
+  group: lock
 
 jobs:
   lock:
@@ -18,19 +18,19 @@ jobs:
     steps:
       - uses: dessant/lock-threads@v5.0.1
         with:
-            github-token: ${{ github.token }}
-            add-issue-labels: 'outdated'
-            exclude-any-issue-labels: 'wait'
-            issue-inactive-days: '30'
-            issue-comment: >
-                This issue has been automatically locked since there
-                has not been any recent activity after it was closed.
-                Please open a new issue for related bugs.
-            issue-lock-reason: 'resolved'
-            exclude-any-pr-labels: 'wait'
-            pr-inactive-days: '30'
-            pr-comment: >
-                This pull request has been automatically locked since there
-                has not been any recent activity after it was closed.
-                Please open a new issue for related bugs.
-            pr-lock-reason: 'resolved'
+          github-token: ${{ github.token }}
+          add-issue-labels: "outdated"
+          exclude-any-issue-labels: "wait"
+          issue-inactive-days: "30"
+          issue-comment: >
+            This issue has been automatically locked since there
+            has not been any recent activity after it was closed.
+            Please open a new issue for related bugs.
+          issue-lock-reason: "resolved"
+          exclude-any-pr-labels: "wait"
+          pr-inactive-days: "30"
+          pr-comment: >
+            This pull request has been automatically locked since there
+            has not been any recent activity after it was closed.
+            Please open a new issue for related bugs.
+          pr-lock-reason: "resolved"
