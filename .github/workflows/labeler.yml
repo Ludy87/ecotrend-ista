@@ -2,12 +2,12 @@ name: Manage labels
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
-      - '.github/actions/**'
-      - '.github/workflows/**'
+      - ".github/actions/**"
+      - ".github/workflows/**"
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   labeler:
