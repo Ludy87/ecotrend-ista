@@ -2,11 +2,11 @@ name: "Flake & Black check"
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
-      - '.github/**'
+      - ".github/**"
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   validate_flake8:
