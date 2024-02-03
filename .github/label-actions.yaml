@@ -3,9 +3,9 @@
 Bug:
   issues:
     label:
-      - 'check for Bug'
-      - 'wait'
-      - 'Version 3'
+      - "check for Bug"
+      - "wait"
+      - "Version 3"
     comment: >
       :wave: @{issue-author}, it is checked whether there is a bug.
       Please have some patience.
@@ -15,11 +15,11 @@ Bug:
 "Bug: Confirmed!":
   issues:
     label:
-      - 'in progress'
-      - 'wait'
-      - 'Version 3'
+      - "in progress"
+      - "wait"
+      - "Version 3"
     unlabel:
-      - 'check for Bug'
+      - "check for Bug"
     comment: >
       :wave: @{issue-author}, we found the bug, it will be fixed shortly.
 
@@ -28,8 +28,8 @@ Bug:
 "feature request":
   issues:
     label:
-      - 'wait'
-      - 'Version 3'
+      - "wait"
+      - "Version 3"
     comment: >
       :wave: @{issue-author}, your proposal will be considered.
       Please have some patience.
@@ -39,10 +39,10 @@ Bug:
 wontfix:
   issues:
     unlabel:
-      - 'wait'
-      - 'in progress'
-      - 'help wanted'
-      - 'check for Bug'
+      - "wait"
+      - "in progress"
+      - "help wanted"
+      - "check for Bug"
     comment: >
       :wave: @{issue-author}, the bug will not be further investigated.
 
@@ -53,10 +53,10 @@ wontfix:
 "New Version":
   issues:
     unlabel:
-      - 'wait'
-      - 'in progress'
-      - 'help wanted'
-      - 'check for Bug'
+      - "wait"
+      - "in progress"
+      - "help wanted"
+      - "check for Bug"
     comment: >
       :wave: @{issue-author}, the bug will not be further investigated.
       A new integration version has been released, check if the bug persists.
@@ -69,8 +69,8 @@ wontfix:
 "PR: released":
   prs:
     unlabel:
-      - 'wait'
-      - 'in progress'
+      - "wait"
+      - "in progress"
 
 "PR: rejected":
   prs:
