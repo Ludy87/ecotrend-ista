@@ -4,7 +4,7 @@
 
 ### enable debugging <https://github.com/Ludy87/ecotrend-ista#debug>
 
-### Go to <https://ecotrend.ista.de/>  and log in. After that, click on the menu, select "Benutzerkonto" and scroll down to "Zwei-Stufen-Authentifizierung" then click on "Hinzufügen"
+### Go to <https://ecotrend.ista.de/> and log in. After that, click on the menu, select "Benutzerkonto" and scroll down to "Zwei-Stufen-Authentifizierung" then click on "Hinzufügen"
 
 ![Two-factor authentication 1](./image/two_factor_authentication_1.png)
 
