@@ -2,11 +2,11 @@ name: Bandit Check
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
-      - '.github/**'
+      - ".github/**"
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   bandit:
@@ -16,5 +16,5 @@ jobs:
       - name: Bandit Check (Python security linter)
         uses: jpetrucciani/bandit-check@master
         with:
-          bandit_flags: '-s B105'
-          path: './custom_components/ecotrend_ista/'
+          bandit_flags: "-s B105"
+          path: "./custom_components/ecotrend_ista/"
