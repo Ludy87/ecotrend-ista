@@ -2,11 +2,11 @@ name: Validate with hassfest and HACS
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
-      - '.github/**'
+      - ".github/**"
   pull_request:
-    branches: [ main ]
+    branches: [main]
   schedule:
     - cron: "0 0 * * *"
 
