@@ -14,6 +14,7 @@
 [![Buy me a coffee](https://img.shields.io/static/v1.svg?label=Buy%20me%20a%20coffee&message=donate&style=for-the-badge&color=black&logo=buy%20me%20a%20coffee&logoColor=white&labelColor=orange)](https://www.buymeacoffee.com/ludy87)
 
 ---
+
 ![ista EcoTrend V3](https://github.com/Ludy87/ecotrend-ista/blob/main/image/logo_new@2x.png?raw=true)
 
 ## Installation
@@ -25,7 +26,7 @@ Copy the ecotrend_ista [last Release](https://github.com/Ludy87/ecotrend-ista/re
 ### INSTALLATION mit HACS
 
 1. Ensure that [HACS](https://hacs.xyz/) is installed.
-2. Search for and install the "__ecotrend ista Integration__" integration. [![GitHub release (latest by date)](https://img.shields.io/github/v/release/Ludy87/ecotrend-ista?style=for-the-badge&logo=GitHub)](https://github.com/Ludy87/ecotrend-ista/releases)
+2. Search for and install the "**ecotrend ista Integration**" integration. [![GitHub release (latest by date)](https://img.shields.io/github/v/release/Ludy87/ecotrend-ista?style=for-the-badge&logo=GitHub)](https://github.com/Ludy87/ecotrend-ista/releases)
 3. [Configuration for the `ista EcoTrend` integration is now performed via a config flow as opposed to yaml configuration file.](https://github.com/Ludy87/ecotrend-ista#basis-configuration)
 4. Restart Home Assistant.
 
