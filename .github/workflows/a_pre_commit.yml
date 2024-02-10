@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   update:
-    if: ${{ github.event.pull_request.user.login != 'dependabot[bot]' }}
+    # if: ${{ github.event.pull_request.user.login != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -21,15 +21,20 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5.0.0
         with:
-          python-version: |
-            3.11
+          python-version: 3.12
+      - name: Set up git config
+        run: |
+          git config --global user.email "GitHub Action <action@github.com>"
+          git config --global user.name "GitHub Action <action@github.com>"
       - name: Install Dependencies
         run: |
-          pip install pre-commit
-          pre-commit install
-      - name: Pre-commit and auto commit
+          pip install pre-commit==3.6.0
+      - name: Run pre-commit and git add
         run: |
-          pre-commit run --all-files || true
+          pre-commit run -c .pre-commit-config.yaml || true
+          git add .
+          git diff --staged --quiet || git commit -m ":file_folder: pre-commit
+          > Made via .github/workflows/a_pre_commit.yml" || echo "pre-commit: no changes"
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6.0.0
         with:
