@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import voluptuous as vol
+
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL
 from homeassistant.helpers.selector import (
     NumberSelector,
