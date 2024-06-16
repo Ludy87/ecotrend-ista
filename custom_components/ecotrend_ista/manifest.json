@@ -10,11 +10,11 @@
     "integration_type": "device",
     "iot_class": "cloud_polling",
     "issue_tracker": "https://github.com/Ludy87/ecotrend-ista/issues",
+    "loggers": ["pyecotrend_ista"],
     "requirements": [
         "pyecotrend_ista==3.2.0",
         "pyotp==2.8.0",
         "marshmallow-enum==1.5.1"
     ],
-    "loggers": ["pyecotrend_ista"],
     "version": "v3.3.0"
 }
