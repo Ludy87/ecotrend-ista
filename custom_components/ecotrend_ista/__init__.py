@@ -52,12 +52,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Configure based on config entry %s", entry.entry_id)
     coordinator = IstaDataUpdateCoordinator(hass, entry)
     await coordinator.init()
-    for uuid in coordinator.controller.getUUIDs():
+    for uuid in coordinator.controller.get_uuids():
         await _async_migrate_entries(
             hass,
             entry,
             uuid,
-            coordinator.controller.getSupportCode(),
+            coordinator.controller.get_support_code(),
         )
     await coordinator.async_config_entry_first_refresh()
 

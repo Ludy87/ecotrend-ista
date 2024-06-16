@@ -51,7 +51,7 @@ class EcotrendBaseEntityV3(CoordinatorEntity[IstaDataUpdateCoordinator], Restore
             manufacturer=f"{MANUFACTURER} {self.uuid}",
             model="ista consumption & costs",
             name=f"{DEVICE_NAME} {self.uuid} {'' if controller._accessToken != 'Demo' else 'Demo'}",
-            sw_version=controller.getVersion(),
+            sw_version=controller.get_version(),
             hw_version=controller._a_tosUpdated,
             via_device=(DOMAIN, f"{self.uuid}"),
         )

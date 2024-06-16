@@ -15,5 +15,6 @@
         "pyotp==2.8.0",
         "marshmallow-enum==1.5.1"
     ],
-    "version": "v3.2.0"
+    "loggers": ["pyecotrend_ista"],
+    "version": "v3.3.0"
 }
