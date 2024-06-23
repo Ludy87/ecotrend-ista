@@ -12,7 +12,7 @@
     "issue_tracker": "https://github.com/Ludy87/ecotrend-ista/issues",
     "loggers": ["pyecotrend_ista"],
     "requirements": [
-        "pyecotrend_ista==3.2.0",
+        "pyecotrend_ista==3.3.1",
         "pyotp==2.8.0",
         "marshmallow-enum==1.5.1"
     ],
