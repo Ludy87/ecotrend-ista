@@ -31,7 +31,6 @@ def login_account(hass: core.HomeAssistant, data: MappingProxyType[str, Any], de
         email=data.get(CONF_EMAIL, None),
         password=data.get(CONF_PASSWORD, None),
         logger=_LOGGER,
-        # hass_dir=(hass.config.path("custom_components/ecotrend_ista") if demo else None),
         totp=data.get(CONF_MFA, "").replace(" ", ""),
         session=requests.Session(),
     )
