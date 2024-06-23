@@ -31,7 +31,6 @@ def login_account(hass: core.HomeAssistant, data: MappingProxyType[str, Any], de
         email=data.get(CONF_EMAIL, None),
         password=data.get(CONF_PASSWORD, None),
         logger=_LOGGER,
-        hass_dir=(hass.config.path("custom_components/ecotrend_ista") if demo else None),
         totp=data.get(CONF_MFA, "").replace(" ", ""),
         session=requests.Session(),
     )
@@ -70,7 +69,7 @@ async def validate_input(hass: core.HomeAssistant, data: dict[str, Any]) -> dict
         raise requests.Timeout from error
 
     return {
-        "title": f"{MANUFACTURER} {account.getSupportCode()} {'' if not login_info or login_info != 'Demo' else login_info}"
+        "title": f"{MANUFACTURER} {account.get_support_code()} {'' if not login_info or login_info != 'Demo' else login_info}"
     }
 
 
