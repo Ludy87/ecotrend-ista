@@ -10,12 +10,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        with:
+          egress-policy: audit
+
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: main
       - name: Set up Python 3
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
         with:
           python-version: |
             3.11
@@ -27,7 +32,7 @@ jobs:
           version="$(python3 ./.github/actions/get_version.py)"
           echo "version=$version" >> $GITHUB_OUTPUT
       - name: Is Tag exists
-        uses: mukunku/tag-exists-action@v1.6.0
+        uses: mukunku/tag-exists-action@bdad1eaa119ce71b150b952c97351c75025c06a9 # v1.6.0
         id: checkTag
         with:
           tag: ${{ steps.version.outputs.version }}
@@ -40,7 +45,7 @@ jobs:
           zip -r ecotrend_ista.zip ./
       - name: Upload zip to release
         if: steps.checkTag.outputs.exists == 'false'
-        uses: svenstaro/upload-release-action@2.9.0
+        uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # 2.9.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ github.workspace }}/custom_components/ecotrend_ista/ecotrend_ista.zip

@@ -5,6 +5,9 @@ on:
   schedule:
     - cron: "0 0 * * *"
 
+permissions:
+  contents: read
+
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -12,5 +15,10 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: Ludy87/action/update_hacs_hassio@v1.0.8
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: Ludy87/action/update_hacs_hassio@ddca2cc68557cc3f96e1dd5898f95df6ecb6e085 # v1.0.8

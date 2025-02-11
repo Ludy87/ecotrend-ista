@@ -10,10 +10,15 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Check if Pull Request
         id: check_pr
         run: echo "is_pull_request=${{ github.event_name == 'pull_request' }}" >> $GITHUB_ENV
       - if: env.is_pull_request == 'true'
         name: Merge
-        uses: Ludy87/action/merge@v1.0.8
+        uses: Ludy87/action/merge@ddca2cc68557cc3f96e1dd5898f95df6ecb6e085 # v1.0.8

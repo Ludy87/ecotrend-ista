@@ -18,6 +18,11 @@ jobs:
   action:
     runs-on: ubuntu-latest
     steps:
-      - uses: dessant/label-actions@v4.0.1
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        with:
+          egress-policy: audit
+
+      - uses: dessant/label-actions@102faf474a544be75fbaf4df54e73d3c515a0e65 # v4.0.1
         with:
           config-path: .github/label-actions.yaml
