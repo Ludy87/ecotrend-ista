@@ -5,6 +5,18 @@ on:
   push:
     branches: [main]
 
+# cancel in-progress jobs if a new job is triggered
+# This is useful to avoid running multiple builds for the same branch if a new commit is pushed
+# or a pull request is updated.
+# It helps to save resources and time by ensuring that only the latest commit is built and tested
+# This is particularly useful for long-running jobs that may take a while to complete.
+# The `group` is set to a combination of the workflow name, event name, and branch name.
+# This ensures that jobs are grouped by the workflow and branch, allowing for cancellation of
+# in-progress jobs when a new commit is pushed to the same branch or a new pull request is opened.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref_name || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
   pull-requests: write
@@ -13,6 +25,7 @@ jobs:
   update:
     # if: ${{ github.event.pull_request.user.login != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
+
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
@@ -26,14 +39,14 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
-          python-version: 3.12
+          python-version: 3.13
       - name: Set up git config
         run: |
           git config --global user.email "GitHub Action <action@github.com>"
           git config --global user.name "GitHub Action <action@github.com>"
       - name: Install Dependencies
         run: |
-          pip install pre-commit==3.6.0
+          pip install pre-commit==4.3.0
       - name: Run pre-commit and git add
         run: |
           pre-commit run -c .pre-commit-config.yaml || true
