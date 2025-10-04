@@ -27,8 +27,8 @@ permissions:
 jobs:
   labeler:
     permissions:
-      contents: read  # for actions/checkout to fetch code
-      issues: write  # for crazy-max/ghaction-github-labeler to create, rename, update and delete label
+      contents: read # for actions/checkout to fetch code
+      issues: write # for crazy-max/ghaction-github-labeler to create, rename, update and delete label
     name: Labeler
     if: ${{ github.event.pull_request.user.login != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
