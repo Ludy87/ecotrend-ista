@@ -12,7 +12,7 @@ ci:
 
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.2.1
+    rev: v0.13.3
     hooks:
       - id: ruff
         args:
@@ -21,7 +21,7 @@ repos:
       - id: ruff-format
         files: ^((custom_components|script|tests)/.+)?[^/]+\.py$
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.6
+    rev: v2.4.1
     hooks:
       - id: codespell
         args:
@@ -32,10 +32,9 @@ repos:
         additional_dependencies:
           - tomli
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
     hooks:
       - id: check-executables-have-shebangs
-        stages: [manual]
       - id: check-json
         exclude: (.vscode|.devcontainer)
   # - repo: https://github.com/adrienverge/yamllint.git
@@ -48,7 +47,7 @@ repos:
       - id: prettier
         exclude_types: [json]
   - repo: https://github.com/cdce8p/python-typing-update
-    rev: v0.6.0
+    rev: v0.7.2
     hooks:
       # Run `python-typing-update` hook manually from time to time
       # to update python typing syntax.
@@ -63,6 +62,6 @@ repos:
         files: ^(custom_components|tests|script)/.+\.py$
         # exclude: ^(custom_components/ecotrend_ista/services.py|custom_components/ecotrend_ista/helper.py)$
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.16.3
+    rev: v8.28.0
     hooks:
       - id: gitleaks
