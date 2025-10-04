@@ -30,7 +30,6 @@ def login_account(hass: core.HomeAssistant, data: MappingProxyType[str, Any], de
     account = PyEcotrendIsta(
         email=data.get(CONF_EMAIL, None),
         password=data.get(CONF_PASSWORD, None),
-        logger=_LOGGER,
         totp=data.get(CONF_MFA, "").replace(" ", ""),
         session=requests.Session(),
     )

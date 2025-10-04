@@ -44,16 +44,15 @@ class EcotrendBaseEntityV3(CoordinatorEntity[IstaDataUpdateCoordinator], Restore
         """Initialize the ista EcoTrend Version 3 base entity."""
         super().__init__(coordinator)
         self._attr_attribution = f"Data provided by {URL_SELECTORS.get(self.coordinator.config_entry.options.get(CONF_URL))}"
-        self._support_code = controller._support_code
+        self._support_code = controller.get_support_code()
         self.uuid = uuid
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self.uuid}")},
             manufacturer=f"{MANUFACTURER} {self.uuid}",
             model="ista consumption & costs",
-            name=f"{DEVICE_NAME} {self.uuid} {'' if controller._access_token != 'Demo' else 'Demo'}",
+            name=f"{DEVICE_NAME} {self.uuid} {'' if controller.access_token != 'Demo' else 'Demo'}",
             sw_version=controller.get_version(),
-            hw_version=controller._account.get("tosUpdated"),
-            via_device=(DOMAIN, f"{self.uuid}"),
+            hw_version=(controller.get_account() or {}).get("tosUpdated"),
         )
         self._unsub_dispatchers: list[Callable[[], None]] = []
 
@@ -136,7 +135,7 @@ async def async_setup_entry(
 
     controller = coordinator.controller
 
-    for uuid in controller.getUUIDs():
+    for uuid in controller.get_uuids():
         entities: list = []
         consum_raw: CustomRaw = CustomRaw.from_dict(
             await hass.async_add_executor_job(

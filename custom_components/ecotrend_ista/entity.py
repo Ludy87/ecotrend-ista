@@ -93,7 +93,6 @@ SENSOR_TYPES: tuple[EcotrendSensorEntityDescription, ...] = (
     EcotrendSensorEntityDescription(
         key=CONF_TYPE_HEATING,
         data_type=CONF_TYPE_HEATING,
-        device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:radiator",
