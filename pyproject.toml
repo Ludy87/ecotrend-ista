@@ -1,6 +1,14 @@
 [tool.ruff]
 target-version = "py311"
 line-length = 127
+src = ["custom_components"]
+
+extend-exclude = [
+    ".venv",
+    "image",
+    "script",
+    "tests/fixtures",
+]
 
 lint.select = [
     "B002", # Python does not support the unary prefix increment
@@ -20,7 +28,6 @@ lint.select = [
     "N804", # First argument of a class method should be named cls
     "N805", # First argument of a method should be named self
     "N815", # Variable {name} in class scope should not be mixedCase
-    "S307", # "PGH001", # No builtin eval() allowed
     "PGH004",  # Use specific rule codes when using noqa
     "PLC0414", # Useless import alias. Import alias does not rename original package.
     "PLC", # pylint
@@ -33,7 +40,7 @@ lint.select = [
     "S103",  # bad-file-permissions
     "S108",  # hardcoded-temp-file
     "S306",  # suspicious-mktemp-usage
-    "S307",  # suspicious-eval-usage
+    "S307",  # suspicious-eval-usage / PGH001 (no builtin eval)
     "S313",  # suspicious-xmlc-element-tree-usage
     "S314",  # suspicious-xml-element-tree-usage
     "S315",  # suspicious-xml-expat-reader-usage
@@ -41,7 +48,6 @@ lint.select = [
     "S317",  # suspicious-xml-sax-usage
     "S318",  # suspicious-xml-mini-dom-usage
     "S319",  # suspicious-xml-pull-dom-usage
-    "S320",  # suspicious-xmle-tree-usage
     "S601",  # paramiko-call
     "S602",  # subprocess-popen-with-shell-equals-true
     "S604",  # call-with-shell-equals-true
