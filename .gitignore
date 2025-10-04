@@ -131,6 +131,11 @@ dmypy.json
 .pyre/
 *.txt
 *test*
+# Allow the integration test suite to be version controlled
+!tests/
+!tests/**
+# Ignore cache files
+tests/__pycache__/
 
 # Home Assistant Core
 /homeassistant
