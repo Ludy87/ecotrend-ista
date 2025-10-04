@@ -86,7 +86,7 @@ class IstaDataUpdateCoordinator(DataUpdateCoordinator):
             if self.data is None:
                 self.data = {}
             await self.init()
-            for uuid in self.controller.getUUIDs():
+            for uuid in self.controller.get_uuids():
                 _consum_raw: dict[str, Any] = await self.hass.async_add_executor_job(
                     self.controller.consum_raw,
                     [
@@ -104,7 +104,7 @@ class IstaDataUpdateCoordinator(DataUpdateCoordinator):
                 await create_directory_file(
                     self.hass,
                     consum_raw,
-                    self.controller.getSupportCode(),
+                    self.controller.get_support_code(),
                 )
                 self.data[uuid] = consum_raw
             self.async_set_updated_data(self.data)
