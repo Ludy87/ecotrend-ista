@@ -32,7 +32,7 @@ jobs:
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: HACS Action
         uses: hacs/action@6f81caf1dd4cc0f615444dba4d4a3ceaa22db99c # main
         with:
@@ -46,5 +46,5 @@ jobs:
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - uses: home-assistant/actions/hassfest@6778c32c6da322382854bd824e30fd4a4f3c20e5 # master
