@@ -25,21 +25,6 @@
         },
         "description": "[%key:common::config_flow::german::description%]",
         "title": "[%key:common::config_flow::german::title%]"
-      },
-      "user": {
-        "data": {
-          "URL": "[%key:common::config_flow::data::URL%]",
-          "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "description": "[%key:common::config_flow::german::description%]",
-        "menu_options": {
-          "denmark": "",
-          "francais": "https://ma-consommation.ista.lu/",
-          "german": "https://www.ecotrend.ista.de/",
-          "netherland": "https://mijn.ista.nl/"
-        },
-        "title": "[%key:common::config_flow::user::title%]"
       }
     }
   },
