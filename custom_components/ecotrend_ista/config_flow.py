@@ -2,32 +2,34 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import copy
 import logging
-from types import MappingProxyType
 from typing import Any
-
-from pyecotrend_ista.exception_classes import LoginError
-from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
-import requests
-import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import NumberSelector, NumberSelectorConfig, NumberSelectorMode
+from pyecotrend_ista.exception_classes import LoginError
+from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
+import requests
+import voluptuous as vol
 
 from .const import CONF_MFA, CONF_UPDATE_INTERVAL, CONF_URL, DOMAIN, MANUFACTURER
-from .const_schema import DATA_SCHEMA_EMAIL, URL_SELECTOR
+from .const_schema import DATA_SCHEMA_EMAIL, URL_SELECTOR, URL_SELECTORS
+from .czech_client import CzechPyEcotrendIsta
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @staticmethod
 @core.callback
-def login_account(hass: core.HomeAssistant, data: MappingProxyType[str, Any], demo: bool = False) -> PyEcotrendIsta:
+def login_account(hass: core.HomeAssistant, data: Mapping[str, Any], demo: bool = False) -> PyEcotrendIsta:
     """Log into an Ecotrend-Ista account and return an account instance."""
-    account = PyEcotrendIsta(
+    del hass, demo
+    account_class = CzechPyEcotrendIsta if data.get(CONF_URL) == "cz_url" else PyEcotrendIsta
+    account = account_class(
         email=data.get(CONF_EMAIL, None),
         password=data.get(CONF_PASSWORD, None),
         totp=data.get(CONF_MFA, "").replace(" ", ""),
@@ -40,14 +42,17 @@ async def validate_input(hass: core.HomeAssistant, data: dict[str, Any]) -> dict
     """Validate the user input allows us to connect.
     Data has the keys from DATA_SCHEMA_EMAIL with values provided by the user.
     """  # noqa: D205
-    if CONF_URL not in data or data[CONF_URL] != "de_url":
+    if CONF_URL not in data or data[CONF_URL] not in URL_SELECTORS:
         raise NotSupportedURL()
 
-    # pylint: disable=no-value-for-parameter
-    try:
-        vol.Email()(data.get(CONF_EMAIL))
-    except vol.Invalid as error:
-        raise vol.Invalid(error) from error
+    if data[CONF_URL] == "de_url":
+        # pylint: disable=no-value-for-parameter
+        try:
+            vol.Email()(data.get(CONF_EMAIL))
+        except vol.Invalid as error:
+            raise vol.Invalid(error) from error
+    elif not str(data.get(CONF_EMAIL, "")).strip():
+        raise vol.Invalid("Username is required")
 
     account = login_account(hass, data)
 
@@ -161,7 +166,7 @@ def validate_options_input(user_input: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect. Data has the keys from DATA_SCHEMA with values provided by the user."""
 
     errors = {}
-    if CONF_URL not in user_input or user_input[CONF_URL] != "de_url":
+    if CONF_URL not in user_input or user_input[CONF_URL] not in URL_SELECTORS:
         errors["base"] = "not_allowed"
     return errors
 

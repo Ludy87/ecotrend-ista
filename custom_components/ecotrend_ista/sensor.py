@@ -7,9 +7,6 @@ import datetime
 import logging
 from typing import Any, cast
 
-from pyecotrend_ista.helper_object_de import CustomRaw
-from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
-
 from homeassistant.components.sensor import RestoreSensor, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -18,6 +15,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from pyecotrend_ista.helper_object_de import CustomRaw
+from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
 
 from .const import (
     CONF_TYPE_HEATING_CUSTOM,
@@ -30,6 +29,7 @@ from .const import (
 )
 from .const_schema import URL_SELECTORS
 from .coordinator import IstaDataUpdateCoordinator
+from .czech_sensor import create_czech_sensor_entities
 from .entity import SENSOR_TYPES, EcotrendSensorEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
@@ -132,6 +132,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ista EcoTrend Version 3 sensors from the config entry."""
     coordinator: IstaDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+
+    if config_entry.options.get(CONF_URL) == "cz_url":
+        async_add_entities(create_czech_sensor_entities(coordinator))
+        return
 
     controller = coordinator.controller
 

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import voluptuous as vol
-
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -17,6 +15,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+import voluptuous as vol
 
 from .const import (
     CONF_MFA,
@@ -31,6 +30,7 @@ from .const import (
 
 URL_SELECTORS = {
     "de_url": "https://ecotrend.ista.de/",
+    "cz_url": "https://ecotrend.ista.cz/",
     # "nl_url": "https://mijn.ista.nl/",
     # "fr_url": "https://ma-consommation.ista.lu/",
 }
@@ -44,7 +44,7 @@ URL_SELECTOR: SelectSelector = SelectSelector(
 )
 
 DATA_SCHEMA_EMAIL = {
-    vol.Required(CONF_EMAIL): TextSelector(TextSelectorConfig(type=TextSelectorType.EMAIL, multiline=False)),
+    vol.Required(CONF_EMAIL): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)),
     vol.Required(CONF_PASSWORD): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD, multiline=False)),
     vol.Required(CONF_URL, default="de_url"): URL_SELECTOR,
     vol.Optional(CONF_MFA, default=""): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=False)),

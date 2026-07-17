@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from datetime import UTC
+from enum import Enum, IntEnum, StrEnum
+from pathlib import Path
 import sys
 import types
-from enum import Enum
-from pathlib import Path
 from typing import Any
 
 
@@ -110,10 +112,70 @@ class Platform(str, Enum):
 
 const.Platform = Platform
 
+
+class UnitOfVolume:
+    """Volume units required by Czech water sensors."""
+
+    CUBIC_METERS = "m³"
+
+
+const.UnitOfVolume = UnitOfVolume
+
 helpers = _ensure_module("homeassistant.helpers")
 selector = _ensure_module("homeassistant.helpers.selector")
 entity_registry = _ensure_module("homeassistant.helpers.entity_registry")
 helpers.entity_registry = entity_registry
+
+sensor_component = _ensure_module("homeassistant.components.sensor")
+
+
+class SensorDeviceClass(StrEnum):
+    """Sensor device classes used by the integration."""
+
+    WATER = "water"
+
+
+class SensorStateClass(StrEnum):
+    """Sensor state classes used by the integration."""
+
+    TOTAL = "total"
+    TOTAL_INCREASING = "total_increasing"
+
+
+@dataclass
+class SensorEntityDescription:
+    """Minimal sensor entity description."""
+
+    key: str
+    native_unit_of_measurement: str | None = None
+    device_class: SensorDeviceClass | None = None
+    state_class: SensorStateClass | None = None
+    entity_category: Any = None
+    icon: str | None = None
+
+
+class SensorEntity:
+    """Minimal Home Assistant sensor entity."""
+
+
+sensor_component.SensorDeviceClass = SensorDeviceClass
+sensor_component.SensorEntity = SensorEntity
+sensor_component.SensorEntityDescription = SensorEntityDescription
+sensor_component.SensorStateClass = SensorStateClass
+
+device_registry = _ensure_module("homeassistant.helpers.device_registry")
+
+
+class DeviceInfo(dict):
+    """Dictionary-shaped device metadata used by entity tests."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Store device metadata."""
+        super().__init__(**kwargs)
+
+
+device_registry.DeviceInfo = DeviceInfo
+helpers.device_registry = device_registry
 
 
 class RegistryEntry:
@@ -247,11 +309,48 @@ class DataUpdateCoordinator:
         self.data = data
 
 
+class CoordinatorEntity:
+    """Minimal coordinator-backed entity base."""
+
+    def __init__(self, coordinator: DataUpdateCoordinator) -> None:
+        """Store the coordinator reference."""
+        self.coordinator = coordinator
+
+    @classmethod
+    def __class_getitem__(cls, _item: Any):
+        """Allow generic coordinator entity annotations."""
+        return cls
+
+
 update_coordinator.DataUpdateCoordinator = DataUpdateCoordinator
+update_coordinator.CoordinatorEntity = CoordinatorEntity
 helpers.update_coordinator = update_coordinator
+
+storage = _ensure_module("homeassistant.helpers.storage")
+
+
+class Store:  # pragma: no cover - replaced by statistics tests
+    """Minimal Home Assistant storage placeholder."""
+
+    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
+        """Initialize empty in-memory storage."""
+        self.data = None
+
+    async def async_load(self):
+        """Return no persisted data by default."""
+        return self.data
+
+    async def async_save(self, data: Any) -> None:
+        """Store data in memory."""
+        self.data = data
+
+
+storage.Store = Store
+helpers.storage = storage
 
 helpers_typing = _ensure_module("homeassistant.helpers.typing")
 helpers_typing.ConfigType = dict[str, Any]
+helpers_typing.StateType = Any
 
 data_entry_flow = _ensure_module("homeassistant.data_entry_flow")
 data_entry_flow.FlowResult = dict
@@ -263,6 +362,35 @@ helpers.update_coordinator = update_coordinator
 
 _data_entry_flow = _ensure_module("homeassistant.data_entry_flow")
 _data_entry_flow.FlowResult = dict
+
+recorder_models = _ensure_module("homeassistant.components.recorder.models")
+
+
+class StatisticMeanType(IntEnum):
+    """Mimic Home Assistant's statistic mean type."""
+
+    NONE = 0
+    ARITHMETIC = 1
+    CIRCULAR = 2
+
+
+recorder_models.StatisticData = dict
+recorder_models.StatisticMeanType = StatisticMeanType
+recorder_models.StatisticMetaData = dict
+
+recorder_statistics = _ensure_module("homeassistant.components.recorder.statistics")
+
+
+def async_add_external_statistics(*_args: Any, **_kwargs: Any) -> None:
+    """Placeholder recorder import callback."""
+
+
+recorder_statistics.async_add_external_statistics = async_add_external_statistics
+
+homeassistant_util = _ensure_module("homeassistant.util")
+dt_util = _ensure_module("homeassistant.util.dt")
+dt_util.DEFAULT_TIME_ZONE = UTC
+homeassistant_util.dt = dt_util
 
 
 # Stub external library used by the integration.
@@ -287,7 +415,7 @@ class CustomRaw:
         self._data = data
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "CustomRaw":
+    def from_dict(cls, data: dict[str, Any]) -> CustomRaw:
         return cls(data)
 
     def to_dict(self) -> dict[str, Any]:
