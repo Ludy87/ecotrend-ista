@@ -17,7 +17,7 @@ import requests
 import voluptuous as vol
 
 from .const import CONF_MFA, CONF_UPDATE_INTERVAL, CONF_URL, DOMAIN, MANUFACTURER
-from .const_schema import DATA_SCHEMA_EMAIL, URL_SELECTOR, URL_SELECTORS
+from .const_schema import DATA_SCHEMA_EMAIL, URL_SELECTORS
 from .czech_client import CzechPyEcotrendIsta
 
 _LOGGER = logging.getLogger(__name__)
@@ -178,9 +178,9 @@ class IstaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         """Handle options flow."""
         options = self.options
         errors: dict[str, str] = {}
+        current_url = options.get(CONF_URL, "de_url")
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_URL, default=options.get(CONF_URL, "de_url")): URL_SELECTOR,
                 vol.Required(CONF_UPDATE_INTERVAL, default=options.get(CONF_UPDATE_INTERVAL, 24)): NumberSelector(
                     NumberSelectorConfig(mode=NumberSelectorMode.SLIDER, min=1, max=24)
                 ),
@@ -188,9 +188,10 @@ class IstaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             }
         )
         if user_input is not None:
-            errors = validate_options_input(user_input)
+            updated_options = {CONF_URL: current_url, **user_input}
+            errors = validate_options_input(updated_options)
 
             if not errors:
-                return self.async_create_entry(title="", data=user_input)
+                return self.async_create_entry(title="", data=updated_options)
 
         return self.async_show_form(step_id="init", data_schema=data_schema, errors=errors, last_step=True)

@@ -130,3 +130,13 @@ def test_validate_options_input_rejects_invalid_url() -> None:
     """An unsupported URL produces an error message."""
 
     assert validate_options_input({"URL": "other"}) == {"base": "not_allowed"}
+
+
+def test_options_flow_preserves_portal_without_offering_a_backend_switch() -> None:
+    """Changing the refresh interval must preserve the validated login portal."""
+    flow = config_flow.IstaOptionsFlowHandler()
+    flow.options = {"URL": "cz_url", "update_interval": 24}
+
+    result = asyncio.run(flow.async_step_init({"update_interval": 12}))
+
+    assert result["data"] == {"URL": "cz_url", "update_interval": 12}

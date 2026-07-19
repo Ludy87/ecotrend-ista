@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import UTC, date, datetime, time
 from decimal import Decimal, InvalidOperation
+import math
 import re
 from typing import Any
 import unicodedata
@@ -18,23 +19,28 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 
 _STORE_VERSION = 1
+_MAX_DECIMAL_DIGITS = 32
+_MAX_DECIMAL_ADJUSTED_EXPONENT = 18
+_MIN_DECIMAL_EXPONENT = -12
 _VOLUME_UNIT = "m³"
 _VOLUME_UNIT_CLASS = "volume"
 _STATISTIC_NAMES = {
-    "heating": "Topení",
-    "warmwater": "Teplá voda",
-    "water": "Studená voda",
+    "en": {
+        "heating": "Heating consumption",
+        "warmwater": "Hot water consumption",
+        "water": "Cold water consumption",
+    },
+    "cs": {
+        "heating": "Spotřeba vytápění",
+        "warmwater": "Spotřeba teplé vody",
+        "water": "Spotřeba studené vody",
+    },
 }
 
 
 def _slug(value: str, fallback: str) -> str:
     """Return a Home Assistant compatible slug."""
-    ascii_value = (
-        unicodedata.normalize("NFKD", value)
-        .encode("ascii", "ignore")
-        .decode("ascii")
-        .lower()
-    )
+    ascii_value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii").lower()
     slug = re.sub(r"_+", "_", re.sub(r"[^a-z0-9]+", "_", ascii_value)).strip("_")
     return slug or fallback
 
@@ -52,14 +58,36 @@ def _store_key(account_id: str) -> str:
 
 
 def _decimal_string(value: Any) -> str | None:
-    """Return a stable decimal representation or None for invalid values."""
+    """Return a stable, bounded decimal representation or None."""
     try:
         decimal_value = Decimal(str(value))
     except (InvalidOperation, TypeError, ValueError):
         return None
     if not decimal_value.is_finite():
         return None
-    return format(decimal_value.normalize(), "f")
+
+    _sign, digits, exponent = decimal_value.as_tuple()
+    if (
+        not isinstance(exponent, int)
+        or len(digits) > _MAX_DECIMAL_DIGITS
+        or exponent < _MIN_DECIMAL_EXPONENT
+        or decimal_value.adjusted() > _MAX_DECIMAL_ADJUSTED_EXPONENT
+    ):
+        return None
+
+    try:
+        return format(decimal_value.normalize(), "f")
+    except (InvalidOperation, ValueError):
+        return None
+
+
+def _finite_float(value: Decimal) -> float | None:
+    """Convert a Decimal only when the recorder value remains finite."""
+    try:
+        float_value = float(value)
+    except (OverflowError, ValueError):
+        return None
+    return float_value if math.isfinite(float_value) else None
 
 
 def _normalize_store(stored: Mapping[str, Any] | None) -> dict[str, Any]:
@@ -169,29 +197,50 @@ def _build_statistics(
     running_sum = Decimal("0")
 
     for day_value in sorted(daily_history):
-        reading_day = date.fromisoformat(day_value)
-        running_sum += Decimal(daily_history[day_value])
+        try:
+            reading_day = date.fromisoformat(day_value)
+        except ValueError:
+            continue
+        decimal_text = _decimal_string(daily_history[day_value])
+        if decimal_text is None:
+            continue
+
+        daily_decimal = Decimal(decimal_text)
+        candidate_sum = running_sum + daily_decimal
+        daily_value = _finite_float(daily_decimal)
+        sum_value = _finite_float(candidate_sum)
+        if daily_value is None or sum_value is None:
+            continue
+
+        running_sum = candidate_sum
         if reading_day < earliest_changed:
             continue
 
-        cumulative_value = float(running_sum)
         statistics.append(
             {
                 "start": _statistics_timestamp(reading_day),
-                "state": cumulative_value,
-                "sum": cumulative_value,
+                "state": daily_value,
+                "sum": sum_value,
             }
         )
 
     return statistics
 
 
-def _metadata(account_id: str, sensor_type: str, unit: str) -> StatisticMetaData:
+def _metadata(
+    account_id: str,
+    sensor_type: str,
+    unit: str,
+    language: str = "en",
+) -> StatisticMetaData:
     """Build recorder metadata for one daily consumption type."""
+    language_code = language.replace("_", "-").partition("-")[0].casefold()
+    names = _STATISTIC_NAMES.get(language_code, _STATISTIC_NAMES["en"])
+    statistic_name = names.get(sensor_type, f"{sensor_type.title()} consumption")
     return {
         "mean_type": StatisticMeanType.NONE,
         "has_sum": True,
-        "name": f"ista EcoTrend {_STATISTIC_NAMES.get(sensor_type, sensor_type)} spotřeba",
+        "name": f"ista EcoTrend {statistic_name}",
         "source": DOMAIN,
         "statistic_id": statistic_id(account_id, sensor_type),
         "unit_class": _VOLUME_UNIT_CLASS if unit == _VOLUME_UNIT else None,
@@ -208,6 +257,7 @@ async def async_sync_czech_statistics(
     components = getattr(getattr(hass, "config", None), "components", ())
     if "recorder" not in components:
         return
+    language = str(getattr(hass.config, "language", "en"))
 
     store = Store(hass, _STORE_VERSION, _store_key(account_id))
     stored = await store.async_load()
@@ -221,7 +271,7 @@ async def async_sync_czech_statistics(
         if statistics:
             async_add_external_statistics(
                 hass,
-                _metadata(account_id, sensor_type, history["unit"]),
+                _metadata(account_id, sensor_type, history["unit"], language),
                 statistics,
             )
 

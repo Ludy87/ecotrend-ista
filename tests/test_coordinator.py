@@ -10,6 +10,8 @@ from typing import Any
 
 from custom_components.ecotrend_ista import coordinator
 from custom_components.ecotrend_ista.coordinator import IstaDataUpdateCoordinator, create_directory_file
+import pytest
+import requests
 
 
 class DummyConfig:
@@ -220,3 +222,28 @@ def test_czech_first_refresh_reuses_setup_login(monkeypatch) -> None:
     result = asyncio.run(data_coordinator._async_update_data())
 
     assert result == {"meters": [], "aggregates": {}}
+
+
+def test_timeout_marks_coordinator_refresh_as_failed() -> None:
+    """A timeout must trigger a retry instead of accepting empty first-refresh data."""
+
+    class DummyEntry:
+        entry_id = "entry"
+        data = {"email": "tenant-login", "password": "secret", "mfa_code": ""}
+        options = {"URL": "cz_url", "update_interval": 24}
+
+    class CoordinatorHass:
+        async def async_add_executor_job(self, func, *args: Any) -> Any:
+            return func(*args)
+
+    class TimedOutController:
+        access_token = "token"
+
+        def get_home_assistant_data(self) -> dict[str, Any]:
+            raise requests.Timeout("slow response")
+
+    data_coordinator = IstaDataUpdateCoordinator(CoordinatorHass(), DummyEntry())
+    data_coordinator.controller = TimedOutController()
+
+    with pytest.raises(coordinator.UpdateFailed):
+        asyncio.run(data_coordinator._async_update_data())

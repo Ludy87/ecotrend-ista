@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 from typing import Any
 
 from custom_components.ecotrend_ista.czech_client import (
@@ -10,8 +11,12 @@ from custom_components.ecotrend_ista.czech_client import (
     CZECH_READING_URL,
     CZECH_TOKEN_URL,
     CzechPyEcotrendIsta,
+    _account_identifier,
+    _as_decimal,
+    _decimal_string,
     _login_proofs,
 )
+import pytest
 
 
 class FakeResponse:
@@ -66,7 +71,7 @@ class FakeSession:
                         "Value": [
                             {
                                 "MeterType": "HCA",
-                                "Unit": "díl",
+                                "Unit": "(jednotky)",
                                 "METER_ID": 101.0,
                                 "METER_NO": "H-1",
                                 "INST_NO": 1,
@@ -79,7 +84,7 @@ class FakeSession:
                             },
                             {
                                 "MeterType": "HCA",
-                                "Unit": "díl",
+                                "Unit": "(jednotky)",
                                 "METER_ID": 102,
                                 "METER_NO": "H-2",
                                 "INST_NO": 2,
@@ -91,7 +96,7 @@ class FakeSession:
                             },
                             {
                                 "MeterType": "HCA",
-                                "Unit": "díl",
+                                "Unit": "(jednotky)",
                                 "METER_ID": 103,
                                 "METER_NO": "H-3",
                                 "INST_NO": 3,
@@ -135,7 +140,7 @@ class FakeSession:
                     {
                         "readingsList": {
                             "Value": {
-                                "Unit": "díl",
+                                "Unit": "Dílků",
                                 "Readings": [
                                     {
                                         "Date": "2026-07-01T00:00:00",
@@ -156,7 +161,7 @@ class FakeSession:
                 {
                     "readingsList": {
                         "Value": {
-                            "Unit": "díl",
+                            "Unit": "Dílků",
                             "Readings": [{"Date": "2026-07-01T00:00:00", "Value": "8,5"}],
                         }
                     }
@@ -231,6 +236,65 @@ class FakeSession:
         raise AssertionError(f"Unexpected URL: {url}")
 
 
+def test_provider_numbers_are_bounded_before_fixed_point_formatting() -> None:
+    """Tiny exponent inputs must not expand into unbounded strings."""
+    assert _as_decimal("1234,567") == Decimal("1234.567")
+    assert _as_decimal("1e1000000") is None
+    assert _as_decimal("1e-1000000") is None
+    assert _as_decimal("NaN") is None
+    assert _as_decimal("Infinity") is None
+    assert _decimal_string(Decimal("1e1000000")) is None
+
+
+def test_account_identifier_separates_logins_on_the_same_provider_instance() -> None:
+    """Two accounts must not share entities or statistics solely due to InstanceId."""
+    first = _account_identifier("first@example.com", 42)
+    second = _account_identifier("second@example.com", 42)
+
+    assert first != second
+    assert first == _account_identifier(" FIRST@example.com ", 42)
+    assert "first@example.com" not in first
+
+
+def test_daily_history_is_limited_to_requested_dates_and_response_size(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Provider history outside the request window or size cap is ignored."""
+    today = date.today()
+    client = CzechPyEcotrendIsta("tenant-login", "secret", session=FakeSession())
+    client._meters = [
+        {
+            "MeterType": "CW",
+            "METER_ID": 1,
+            "Unit": "m3",
+            "Last_Meter_Reading": 10,
+            "Reading_date": today.isoformat(),
+        }
+    ]
+    readings = [
+        {"Date": (today - timedelta(days=500)).isoformat(), "Value": 100},
+        {"Date": (today + timedelta(days=1)).isoformat(), "Value": 100},
+        *({"Date": today.isoformat(), "Value": 1} for _ in range(4_998)),
+        {"Date": today.isoformat(), "Value": 100},
+    ]
+
+    monkeypatch.setattr(
+        client,
+        "_get_readings",
+        lambda *_args, **_kwargs: {"Unit": "m3", "Readings": readings},
+    )
+
+    aggregate = client.get_home_assistant_data()["aggregates"]["water"]
+
+    assert aggregate["daily"] == [
+        {
+            "date": today.isoformat(),
+            "value": "4998",
+            "cumulative_value": None,
+        }
+    ]
+
+
 def test_login_proofs_match_captured_web_client_request() -> None:
     """The implementation must stay byte-compatible with the public WebGL client."""
 
@@ -266,17 +330,14 @@ def test_login_and_normalize_readings() -> None:
     assert set(token_form) == {"grant_type", "username", "password", "value1", "value2"}
     assert token_form["username"] == "tenant-login"
     assert client.access_token == "access-token"
-    assert client.get_uuids() == ["cz-42"]
+    assert client.get_uuids() == [_account_identifier("tenant-login", 42)]
     assert all(headers == {"Authorization": "bearer access-token"} for _, headers in session.get_calls)
-    assert all(
-        url == CZECH_METERS_URL or url.startswith(f"{CZECH_READING_URL}/")
-        for url, _ in session.get_calls
-    )
+    assert all(url == CZECH_METERS_URL or url.startswith(f"{CZECH_READING_URL}/") for url, _ in session.get_calls)
     assert all("/2/" in url for url, _ in session.get_calls if url != CZECH_METERS_URL)
 
     readings = {reading["type"]: reading for reading in consumption_data["consumptions"][0]["readings"]}
     assert readings["heating"]["value"] == "8.5"
-    assert readings["heating"]["unit"] == "díl"
+    assert readings["heating"]["unit"] == "jednotek"
     assert readings["warmwater"]["value"] == "0.75"
     assert readings["warmwater"]["unit"] == "m³"
     assert readings["water"]["value"] == "2"
@@ -303,6 +364,7 @@ def test_home_assistant_data_exposes_five_meters_and_aggregate_periods() -> None
     ]
     assert home_data["meters"][0]["room"] == "Obývací pokoj"
     assert home_data["meters"][0]["value"] == "120.5"
+    assert home_data["meters"][0]["unit"] == "jednotek"
     assert home_data["meters"][3]["last_consumption"] == "0.75"
 
     aggregates = home_data["aggregates"]
@@ -316,23 +378,13 @@ def test_home_assistant_data_exposes_five_meters_and_aggregate_periods() -> None
         "cumulative_value": "22",
     }
 
-    daily_urls = [
-        url
-        for url, _headers in session.get_calls
-        if url.startswith(f"{CZECH_READING_URL}/") and "/4/" in url
-    ]
+    daily_urls = [url for url, _headers in session.get_calls if url.startswith(f"{CZECH_READING_URL}/") and "/4/" in url]
     assert len(daily_urls) == 3
     assert sum(url.endswith("/hca") for url in daily_urls) == 1
 
     monthly_data = client.get_consumption_data()
-    assert not any(
-        url.startswith(f"{CZECH_READING_URL}/") and "/2/" in url
-        for url, _headers in session.get_calls
-    )
-    monthly_readings = {
-        reading["type"]: reading
-        for reading in monthly_data["consumptions"][0]["readings"]
-    }
+    assert not any(url.startswith(f"{CZECH_READING_URL}/") and "/2/" in url for url, _headers in session.get_calls)
+    monthly_readings = {reading["type"]: reading for reading in monthly_data["consumptions"][0]["readings"]}
     assert monthly_readings["heating"]["value"] == "4"
     assert monthly_readings["warmwater"]["value"] == "0.3"
     assert monthly_readings["water"]["value"] == "3"

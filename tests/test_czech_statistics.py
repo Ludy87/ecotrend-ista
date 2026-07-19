@@ -61,12 +61,30 @@ def test_build_statistics_uses_complete_history_for_stable_running_sum() -> None
         date(2025, 1, 2),
     )
 
-    assert [item["state"] for item in statistics] == [4.0, 7.0]
+    assert [item["state"] for item in statistics] == [2.5, 3.0]
     assert [item["sum"] for item in statistics] == [4.0, 7.0]
     assert [item["start"] for item in statistics] == [
         datetime(2025, 1, 2, 23, tzinfo=UTC),
         datetime(2025, 1, 3, 23, tzinfo=UTC),
     ]
+
+
+def test_statistics_reject_values_that_cannot_be_stored_safely() -> None:
+    """Exponent expansion and non-finite recorder floats are rejected."""
+    assert czech_statistics._decimal_string("1e1000000") is None
+    assert czech_statistics._decimal_string("1e400") is None
+    assert czech_statistics._decimal_string("NaN") is None
+
+    statistics = czech_statistics._build_statistics(
+        {
+            "2025-01-01": "1e400",
+            "2025-01-02": "2",
+        },
+        date(2025, 1, 1),
+    )
+
+    assert [item["state"] for item in statistics] == [2.0]
+    assert [item["sum"] for item in statistics] == [2.0]
 
 
 def test_statistic_metadata_has_stable_id_and_volume_unit_class() -> None:
@@ -76,12 +94,14 @@ def test_statistic_metadata_has_stable_id_and_volume_unit_class() -> None:
     assert metadata == {
         "mean_type": czech_statistics.StatisticMeanType.NONE,
         "has_sum": True,
-        "name": "ista EcoTrend Teplá voda spotřeba",
+        "name": "ista EcoTrend Hot water consumption",
         "source": DOMAIN,
         "statistic_id": f"{DOMAIN}:cesky_ucet_42_warmwater_daily",
         "unit_class": "volume",
         "unit_of_measurement": "m³",
     }
+    assert czech_statistics._metadata("account", "warmwater", "m³", "cs")["name"] == ("ista EcoTrend Spotřeba teplé vody")
+    assert czech_statistics._metadata("account", "heating", "jednotek", "cs")["name"] == ("ista EcoTrend Spotřeba vytápění")
     assert czech_statistics._metadata("account", "heating", "Dílků")["unit_class"] is None
 
 

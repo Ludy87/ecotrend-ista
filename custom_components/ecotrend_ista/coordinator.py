@@ -11,7 +11,7 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from pyecotrend_ista.helper_object_de import CustomRaw
 from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
 import requests
@@ -98,9 +98,7 @@ class IstaDataUpdateCoordinator(DataUpdateCoordinator):
                 await self.init()
 
             if is_czech:
-                self.czech_data = await self.hass.async_add_executor_job(
-                    self.controller.get_home_assistant_data
-                )
+                self.czech_data = await self.hass.async_add_executor_job(self.controller.get_home_assistant_data)
                 await async_sync_czech_statistics(
                     self.hass,
                     self.controller.get_support_code(),
@@ -131,5 +129,5 @@ class IstaDataUpdateCoordinator(DataUpdateCoordinator):
                 self.data[uuid] = consum_raw
             self.async_set_updated_data(self.data)
             return self.data
-        except requests.Timeout:
-            pass
+        except requests.Timeout as error:
+            raise UpdateFailed("Timeout while communicating with ista EcoTrend") from error

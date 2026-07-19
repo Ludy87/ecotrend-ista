@@ -17,14 +17,23 @@ from .const import DOMAIN, MANUFACTURER
 from .coordinator import IstaDataUpdateCoordinator
 from .czech_statistics import statistic_id
 
-_CONSUMPTION_NAMES = {
-    "heating": "Topení",
-    "warmwater": "Teplá voda",
-    "water": "Studená voda",
+_METER_TRANSLATION_KEYS = {
+    "heating": "czech_heating_meter",
+    "warmwater": "czech_warm_water_meter",
+    "water": "czech_cold_water_meter",
 }
-_PERIOD_NAMES = {
-    "daily": "denní",
-    "monthly": "měsíční",
+_AGGREGATE_TRANSLATION_KEYS = {
+    ("heating", "daily"): "czech_heating_daily",
+    ("heating", "monthly"): "czech_heating_monthly",
+    ("warmwater", "daily"): "czech_warm_water_daily",
+    ("warmwater", "monthly"): "czech_warm_water_monthly",
+    ("water", "daily"): "czech_cold_water_daily",
+    ("water", "monthly"): "czech_cold_water_monthly",
+}
+_HEATING_NATIVE_UNIT_TRANSLATION_KEYS = {
+    "meter": "czech_heating_meter_native_unit",
+    "daily": "czech_heating_daily_native_unit",
+    "monthly": "czech_heating_monthly_native_unit",
 }
 _WATER_TYPES = {"warmwater", "water"}
 _CUBIC_METRE_UNITS = {
@@ -34,6 +43,16 @@ _CUBIC_METRE_UNITS = {
     "m3",
     "m³",
 }
+_HEATING_UNIT_ALIASES = {
+    "díl",
+    "dílků",
+    "jednotka",
+    "jednotky",
+    "jednotek",
+    "unit",
+    "units",
+}
+_HEATING_UNIT = "jednotek"
 
 
 def _czech_data(coordinator: IstaDataUpdateCoordinator) -> dict[str, Any]:
@@ -85,46 +104,78 @@ def _number(value: Any) -> StateType:
 
 
 def _unit(unit: Any, consumption_type: str) -> str | None:
-    """Normalize Czech water-volume units to the Home Assistant unit."""
+    """Normalize Czech API units for Home Assistant."""
     if unit is None:
         return None
     value = str(unit).strip()
     if not value:
         return None
-    compact = re.sub(r"[\s._-]+", "", value.casefold())
+    compact = re.sub(r"[\s._()/-]+", "", value.casefold())
     if consumption_type in _WATER_TYPES and compact in _CUBIC_METRE_UNITS:
         return UnitOfVolume.CUBIC_METERS
+    if consumption_type == "heating" and compact in _HEATING_UNIT_ALIASES:
+        return _HEATING_UNIT
     return value
 
 
-def _period_start(aggregate: dict[str, Any], period: str) -> datetime | None:
-    """Return the local start of the latest represented interval."""
-    if period == "daily":
-        raw_date = aggregate.get("daily_date")
-        if not raw_date:
-            return None
-        try:
-            interval_date = date.fromisoformat(str(raw_date))
-        except ValueError:
-            return None
-        return datetime(
-            interval_date.year,
-            interval_date.month,
-            interval_date.day,
-            tzinfo=dt_util.DEFAULT_TIME_ZONE,
-        )
-
-    try:
-        year = int(aggregate["monthly_year"])
-        month = int(aggregate["monthly_month"])
-        return datetime(year, month, 1, tzinfo=dt_util.DEFAULT_TIME_ZONE)
-    except (KeyError, TypeError, ValueError):
+def _latest_data_date(aggregate: dict[str, Any]) -> date | None:
+    """Return the latest daily date represented by an aggregate."""
+    raw_date = aggregate.get("daily_date")
+    if not raw_date:
         return None
+    try:
+        return date.fromisoformat(str(raw_date))
+    except ValueError:
+        return None
+
+
+def _data_delay_days(data_date: date | None) -> int | None:
+    """Return how many local calendar days the available data trails today."""
+    if data_date is None:
+        return None
+    today = datetime.now(tz=dt_util.DEFAULT_TIME_ZONE).date()
+    return max(0, (today - data_date).days)
 
 
 def _defined_attributes(values: dict[str, Any]) -> dict[str, Any]:
     """Remove empty metadata values from state attributes."""
     return {key: value for key, value in values.items() if value not in (None, "")}
+
+
+def _available_consumption_types(data: dict[str, Any]) -> set[str]:
+    """Return consumption types represented by meters or aggregate data."""
+    consumption_types: set[str] = set()
+    meters = data.get("meters")
+    if isinstance(meters, list):
+        consumption_types.update(
+            str(meter["type"]) for meter in meters if isinstance(meter, dict) and meter.get("type") in _METER_TRANSLATION_KEYS
+        )
+
+    aggregates = data.get("aggregates")
+    if isinstance(aggregates, dict):
+        consumption_types.update(
+            consumption_type for consumption_type in aggregates if consumption_type in _METER_TRANSLATION_KEYS
+        )
+    return consumption_types
+
+
+def _meter_lookup(coordinator: IstaDataUpdateCoordinator) -> dict[tuple[str, str], dict[str, Any]]:
+    """Return an O(1) meter lookup cached for the current coordinator payload."""
+    meters = _czech_data(coordinator).get("meters", [])
+    if not isinstance(meters, list):
+        return {}
+
+    cache = getattr(coordinator, "_czech_meter_lookup_cache", None)
+    if isinstance(cache, tuple) and len(cache) == 2 and cache[0] is meters:
+        return cache[1]
+
+    lookup = {
+        (str(meter.get("type")), str(meter.get("id"))): meter
+        for meter in meters
+        if isinstance(meter, dict) and meter.get("id") is not None
+    }
+    coordinator._czech_meter_lookup_cache = (meters, lookup)
+    return lookup
 
 
 class CzechEcotrendSensorEntity(CoordinatorEntity[IstaDataUpdateCoordinator], SensorEntity):
@@ -162,33 +213,28 @@ class CzechPhysicalMeterSensor(CzechEcotrendSensorEntity):
         self._meter_id = str(meter["id"])
         self._consumption_type = str(meter["type"])
         unique_meter_id = _unique_id_part(self._meter_id)
-        self._attr_unique_id = (
-            f"{_unique_id_part(self._account_id)}_meter_{self._consumption_type}_{unique_meter_id}"
-        )
+        self._attr_unique_id = f"{_unique_id_part(self._account_id)}_meter_{self._consumption_type}_{unique_meter_id}"
 
-        type_name = _CONSUMPTION_NAMES.get(self._consumption_type, self._consumption_type.title())
         meter_number = meter.get("meter_number")
         detail = meter.get("room") or meter.get("label") or meter_number or self._meter_id
         if meter_number and meter_number != detail:
             detail = f"{detail} ({meter_number})"
-        self._attr_name = f"{type_name} {detail}"
+        self._uses_translated_heating_unit = (
+            self._consumption_type == "heating" and _unit(meter.get("unit"), self._consumption_type) == _HEATING_UNIT
+        )
+        self._attr_translation_key = (
+            _METER_TRANSLATION_KEYS[self._consumption_type]
+            if self._consumption_type != "heating" or self._uses_translated_heating_unit
+            else _HEATING_NATIVE_UNIT_TRANSLATION_KEYS["meter"]
+        )
+        self._attr_translation_placeholders = {"detail": str(detail)}
         if self._consumption_type in _WATER_TYPES:
             self._attr_device_class = SensorDeviceClass.WATER
 
     @property
     def _meter(self) -> dict[str, Any]:
         """Return the latest data for this physical meter."""
-        meters = _czech_data(self.coordinator).get("meters", [])
-        if not isinstance(meters, list):
-            return {}
-        for meter in meters:
-            if (
-                isinstance(meter, dict)
-                and str(meter.get("id")) == self._meter_id
-                and str(meter.get("type")) == self._consumption_type
-            ):
-                return meter
-        return {}
+        return _meter_lookup(self.coordinator).get((self._consumption_type, self._meter_id), {})
 
     @property
     def native_value(self) -> StateType:
@@ -198,7 +244,8 @@ class CzechPhysicalMeterSensor(CzechEcotrendSensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the meter unit."""
-        return _unit(self._meter.get("unit"), self._consumption_type)
+        unit = _unit(self._meter.get("unit"), self._consumption_type)
+        return None if self._uses_translated_heating_unit else unit
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -224,8 +271,6 @@ class CzechPhysicalMeterSensor(CzechEcotrendSensorEntity):
 class CzechAggregateSensor(CzechEcotrendSensorEntity):
     """Daily or monthly Czech ista consumption aggregate."""
 
-    _attr_state_class = SensorStateClass.TOTAL
-
     def __init__(
         self,
         coordinator: IstaDataUpdateCoordinator,
@@ -236,11 +281,19 @@ class CzechAggregateSensor(CzechEcotrendSensorEntity):
         super().__init__(coordinator)
         self._consumption_type = consumption_type
         self._period = period
-        self._attr_unique_id = (
-            f"{_unique_id_part(self._account_id)}_{consumption_type}_{period}"
+        self._attr_unique_id = f"{_unique_id_part(self._account_id)}_{consumption_type}_{period}"
+        aggregates = _czech_data(coordinator).get("aggregates", {})
+        initial_aggregate = aggregates.get(consumption_type, {}) if isinstance(aggregates, dict) else {}
+        self._uses_translated_heating_unit = (
+            consumption_type == "heating"
+            and isinstance(initial_aggregate, dict)
+            and _unit(initial_aggregate.get("unit"), consumption_type) == _HEATING_UNIT
         )
-        type_name = _CONSUMPTION_NAMES[consumption_type]
-        self._attr_name = f"{type_name} {_PERIOD_NAMES[period]}"
+        self._attr_translation_key = (
+            _AGGREGATE_TRANSLATION_KEYS[(consumption_type, period)]
+            if consumption_type != "heating" or self._uses_translated_heating_unit
+            else _HEATING_NATIVE_UNIT_TRANSLATION_KEYS[period]
+        )
         if consumption_type in _WATER_TYPES:
             self._attr_device_class = SensorDeviceClass.WATER
 
@@ -261,17 +314,14 @@ class CzechAggregateSensor(CzechEcotrendSensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the aggregate unit."""
-        return _unit(self._aggregate.get("unit"), self._consumption_type)
-
-    @property
-    def last_reset(self) -> datetime | None:
-        """Return the start of the represented daily or monthly interval."""
-        return _period_start(self._aggregate, self._period)
+        unit = _unit(self._aggregate.get("unit"), self._consumption_type)
+        return None if self._uses_translated_heating_unit else unit
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return aggregate metadata without embedding historical readings."""
         aggregate = self._aggregate
+        data_through = _latest_data_date(aggregate)
         if self._period == "daily":
             latest_period = aggregate.get("daily_date")
         else:
@@ -283,10 +333,61 @@ class CzechAggregateSensor(CzechEcotrendSensorEntity):
                 "consumption_type": self._consumption_type,
                 "period": self._period,
                 "latest_period": latest_period,
+                "data_through": data_through.isoformat() if data_through else None,
+                "delay_days": _data_delay_days(data_through),
                 "external_statistic_id": statistic_id(
                     self._account_id,
                     self._consumption_type,
                 ),
+            }
+        )
+
+
+class CzechDataFreshnessSensor(CzechEcotrendSensorEntity):
+    """Latest date through which all available consumption types have data."""
+
+    _attr_device_class = SensorDeviceClass.DATE
+    _attr_translation_key = "czech_data_through"
+
+    def __init__(self, coordinator: IstaDataUpdateCoordinator) -> None:
+        """Initialize the data freshness sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{_unique_id_part(self._account_id)}_data_through"
+
+    @property
+    def _dates_by_type(self) -> dict[str, date | None]:
+        """Return the latest date for every expected consumption type."""
+        data = _czech_data(self.coordinator)
+        aggregates = data.get("aggregates", {})
+        if not isinstance(aggregates, dict):
+            aggregates = {}
+
+        return {
+            consumption_type: (
+                _latest_data_date(aggregate) if isinstance((aggregate := aggregates.get(consumption_type)), dict) else None
+            )
+            for consumption_type in _available_consumption_types(data)
+        }
+
+    @property
+    def native_value(self) -> date | None:
+        """Return the oldest latest date so the value is valid for every type."""
+        dates = list(self._dates_by_type.values())
+        if not dates or any(data_date is None for data_date in dates):
+            return None
+        return min(data_date for data_date in dates if data_date is not None)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Expose per-type freshness and the effective delay."""
+        dates = self._dates_by_type
+        data_through = self.native_value
+        return _defined_attributes(
+            {
+                "delay_days": _data_delay_days(data_through),
+                "heating_data_through": dates.get("heating").isoformat() if dates.get("heating") else None,
+                "hot_water_data_through": dates.get("warmwater").isoformat() if dates.get("warmwater") else None,
+                "cold_water_data_through": dates.get("water").isoformat() if dates.get("water") else None,
             }
         )
 
@@ -296,11 +397,12 @@ def create_czech_sensor_entities(
 ) -> list[CzechEcotrendSensorEntity]:
     """Create physical and aggregate sensor entities for a Czech account."""
     entities: list[CzechEcotrendSensorEntity] = []
-    meters = _czech_data(coordinator).get("meters", [])
+    data = _czech_data(coordinator)
+    meters = data.get("meters", [])
     seen_meters: set[tuple[str, str]] = set()
     if isinstance(meters, list):
         for meter in meters:
-            if not isinstance(meter, dict) or meter.get("id") is None or meter.get("type") is None:
+            if not isinstance(meter, dict) or meter.get("id") is None or meter.get("type") not in _METER_TRANSLATION_KEYS:
                 continue
             meter_key = (str(meter["type"]), str(meter["id"]))
             if meter_key in seen_meters:
@@ -308,9 +410,11 @@ def create_czech_sensor_entities(
             seen_meters.add(meter_key)
             entities.append(CzechPhysicalMeterSensor(coordinator, meter))
 
+    available_types = _available_consumption_types(data)
     entities.extend(
         CzechAggregateSensor(coordinator, consumption_type, period)
-        for consumption_type in _CONSUMPTION_NAMES
-        for period in _PERIOD_NAMES
+        for consumption_type, period in _AGGREGATE_TRANSLATION_KEYS
+        if consumption_type in available_types
     )
+    entities.append(CzechDataFreshnessSensor(coordinator))
     return entities

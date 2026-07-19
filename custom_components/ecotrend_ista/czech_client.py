@@ -30,10 +30,27 @@ CZECH_APP_VERSION = "3.2.1"
 _REQUEST_TIMEOUT = 30
 _PERIOD_MONTHLY_HISTORY = 2
 _PERIOD_DAILY_HISTORY = 4
+_MAX_METER_TYPES = 16
+_MAX_READINGS_PER_RESPONSE = 5_000
+_MAX_DECIMAL_DIGITS = 32
+_MAX_DECIMAL_ADJUSTED_EXPONENT = 18
+_MAX_RENDERED_DECIMAL_DIGITS = 40
+_MAX_RENDERED_DECIMAL_ADJUSTED_EXPONENT = 24
+_MIN_DECIMAL_EXPONENT = -12
 _DOTNET_DATE = re.compile(r"^/Date\((?P<milliseconds>-?\d+)")
 _LOGIN_KDF_PASSWORD = "P@%5w0r]>3mll04##22"
 _LOGIN_KDF_SALT = "(&(HBB%J&Y*B1-3mll04##22"
 _CUBIC_METRE_UNITS = {"cbm", "cubicmeter", "cubicmetre", "m3", "m³"}
+_HEATING_UNIT_ALIASES = {
+    "díl",
+    "dílků",
+    "jednotka",
+    "jednotky",
+    "jednotek",
+    "unit",
+    "units",
+}
+_HEATING_UNIT = "jednotek"
 
 
 def _value_case_insensitive(data: dict[str, Any], key: str, default: Any = None) -> Any:
@@ -138,33 +155,64 @@ def _parse_reading_date(value: Any) -> datetime | None:
     return None
 
 
+def _is_supported_decimal(
+    value: Decimal,
+    *,
+    max_digits: int = _MAX_DECIMAL_DIGITS,
+    max_adjusted_exponent: int = _MAX_DECIMAL_ADJUSTED_EXPONENT,
+) -> bool:
+    """Return whether a provider number is finite and safe to render."""
+    if not value.is_finite():
+        return False
+
+    _sign, digits, exponent = value.as_tuple()
+    return (
+        isinstance(exponent, int)
+        and len(digits) <= max_digits
+        and exponent >= _MIN_DECIMAL_EXPONENT
+        and value.adjusted() <= max_adjusted_exponent
+    )
+
+
 def _as_decimal(value: Any) -> Decimal | None:
-    """Convert API numbers, including comma-decimal strings, to Decimal."""
+    """Convert a bounded API number, including comma-decimal strings, to Decimal."""
     if value is None or isinstance(value, bool):
         return None
     if isinstance(value, Decimal):
-        return value
-    if isinstance(value, (int, float)):
-        return Decimal(str(value))
-    if not isinstance(value, str):
-        return None
-
-    normalized = value.strip().replace("\u00a0", "").replace(" ", "")
-    if not normalized:
-        return None
-    if "," in normalized and "." in normalized:
-        normalized = normalized.replace(".", "").replace(",", ".")
+        decimal_value = value
+    elif isinstance(value, (int, float)):
+        decimal_value = Decimal(str(value))
+    elif isinstance(value, str):
+        normalized = value.strip().replace("\u00a0", "").replace(" ", "")
+        if not normalized:
+            return None
+        if "," in normalized and "." in normalized:
+            normalized = normalized.replace(".", "").replace(",", ".")
+        else:
+            normalized = normalized.replace(",", ".")
+        try:
+            decimal_value = Decimal(normalized)
+        except InvalidOperation:
+            return None
     else:
-        normalized = normalized.replace(",", ".")
-    try:
-        return Decimal(normalized)
-    except InvalidOperation:
         return None
 
+    return decimal_value if _is_supported_decimal(decimal_value) else None
 
-def _decimal_string(value: Decimal) -> str:
-    """Return a representation compatible with the existing German parser."""
-    result = format(value, "f")
+
+def _decimal_string(value: Decimal) -> str | None:
+    """Return a bounded representation compatible with the German parser."""
+    if not _is_supported_decimal(
+        value,
+        max_digits=_MAX_RENDERED_DECIMAL_DIGITS,
+        max_adjusted_exponent=_MAX_RENDERED_DECIMAL_ADJUSTED_EXPONENT,
+    ):
+        return None
+
+    try:
+        result = format(value, "f")
+    except (InvalidOperation, ValueError):
+        return None
     if "." in result:
         result = result.rstrip("0").rstrip(".")
     return result or "0"
@@ -175,17 +223,26 @@ def _identifier_string(value: Any) -> str:
     if isinstance(value, str):
         return value.strip()
     decimal_value = _as_decimal(value)
-    if decimal_value is not None:
-        return _decimal_string(decimal_value)
+    if decimal_value is not None and (decimal_text := _decimal_string(decimal_value)) is not None:
+        return decimal_text
     return str(value)
 
 
+def _account_identifier(username: str, instance_id: Any) -> str:
+    """Return a stable account identifier without exposing the login name."""
+    login_hash = hashlib.sha256(username.strip().casefold().encode()).hexdigest()[:12]
+    instance_part = re.sub(r"[^a-z0-9]+", "-", _identifier_string(instance_id).casefold()).strip("-")
+    return f"cz-{instance_part}-{login_hash}" if instance_part else f"cz-{login_hash}"
+
+
 def _normalize_unit(value: Any, sensor_type: str) -> str:
-    """Normalize water volume aliases to the Home Assistant cubic-metre unit."""
+    """Normalize API unit aliases to stable Home Assistant units."""
     unit = str(value or "").strip()
-    compact = re.sub(r"[\s._-]+", "", unit.casefold())
+    compact = re.sub(r"[\s._()/-]+", "", unit.casefold())
     if sensor_type in {"warmwater", "water"} and compact in _CUBIC_METRE_UNITS:
         return "m³"
+    if sensor_type == "heating" and compact in _HEATING_UNIT_ALIASES:
+        return _HEATING_UNIT
     return unit
 
 
@@ -280,9 +337,10 @@ class CzechPyEcotrendIsta(PyEcotrendIsta):
         self._access_token = str(access_token)
 
         instance_id = _value_case_insensitive(token_data, "InstanceId")
-        if instance_id in (None, "", 0, "0"):
-            instance_id = hashlib.sha256(self._email.encode()).hexdigest()[:12]
-        self._uuid = f"cz-{instance_id}"
+        self._uuid = _account_identifier(
+            self._email,
+            "" if instance_id in (None, "", 0, "0") else instance_id,
+        )
         self._support_code = self._uuid
         self._account = {
             "firstName": _value_case_insensitive(token_data, "FirstName", ""),
@@ -345,10 +403,7 @@ class CzechPyEcotrendIsta(PyEcotrendIsta):
         end: date,
         period: int = _PERIOD_MONTHLY_HISTORY,
     ) -> dict[str, Any] | None:
-        url = (
-            f"{CZECH_READING_URL}/{start:%d-%m-%Y}/{end:%d-%m-%Y}/"
-            f"{period}/{quote(meter_type, safe='')}"
-        )
+        url = f"{CZECH_READING_URL}/{start:%d-%m-%Y}/{end:%d-%m-%Y}/{period}/{quote(meter_type, safe='')}"
         response = self.session.get(
             url,
             headers=self._authorization_headers(),
@@ -370,16 +425,16 @@ class CzechPyEcotrendIsta(PyEcotrendIsta):
             sensor_type = _classify_meter(meter, meter_type)
             if not meter_type or not sensor_type:
                 continue
-            meter_types.setdefault(meter_type.casefold(), (sensor_type, meter))
+            meter_type_key = meter_type.casefold()
+            if meter_type_key in meter_types or len(meter_types) < _MAX_METER_TYPES:
+                meter_types.setdefault(meter_type_key, (sensor_type, meter))
 
             meter_id = _value_case_insensitive(meter, "METER_ID")
             if not meter_id:
                 meter_number = _value_case_insensitive(meter, "METER_NO")
                 installation_number = _value_case_insensitive(meter, "INST_NO")
                 fallback_parts = [
-                    _identifier_string(part)
-                    for part in (meter_number, installation_number)
-                    if part not in (None, "")
+                    _identifier_string(part) for part in (meter_number, installation_number) if part not in (None, "")
                 ]
                 meter_id = "-".join(fallback_parts) or f"{meter_type}-{index}"
             reading_date = _parse_reading_date(_value_case_insensitive(meter, "Reading_date"))
@@ -392,9 +447,7 @@ class CzechPyEcotrendIsta(PyEcotrendIsta):
                     "type": sensor_type,
                     "meter_type": meter_type,
                     "meter_number": str(_value_case_insensitive(meter, "METER_NO", "") or ""),
-                    "installation_number": _identifier_string(
-                        _value_case_insensitive(meter, "INST_NO", "") or ""
-                    ),
+                    "installation_number": _identifier_string(_value_case_insensitive(meter, "INST_NO", "") or ""),
                     "room": str(_value_case_insensitive(meter, "ROOM_DESCR", "") or ""),
                     "label": str(
                         _value_case_insensitive(
@@ -407,9 +460,7 @@ class CzechPyEcotrendIsta(PyEcotrendIsta):
                     "category": str(_value_case_insensitive(meter, "METCAT_LABEL", "") or ""),
                     "unit": unit,
                     "value": _decimal_string(last_reading) if last_reading is not None else None,
-                    "last_consumption": (
-                        _decimal_string(last_consumption) if last_consumption is not None else None
-                    ),
+                    "last_consumption": (_decimal_string(last_consumption) if last_consumption is not None else None),
                     "reading_date": reading_date.isoformat() if reading_date is not None else None,
                     "activation_date": _value_case_insensitive(meter, "Activation_date"),
                     "deactivation_date": _value_case_insensitive(meter, "Deactivation_date"),
@@ -435,8 +486,14 @@ class CzechPyEcotrendIsta(PyEcotrendIsta):
             readings = _value_case_insensitive(readings_list, "Readings", [])
             if not isinstance(readings, list):
                 continue
+            if len(readings) > _MAX_READINGS_PER_RESPONSE:
+                _LOGGER.warning(
+                    "Ignoring %s excess Czech ista daily readings for meter type %s",
+                    len(readings) - _MAX_READINGS_PER_RESPONSE,
+                    meter_type,
+                )
 
-            for reading in readings:
+            for reading in readings[:_MAX_READINGS_PER_RESPONSE]:
                 if not isinstance(reading, dict):
                     continue
                 reading_date = _parse_reading_date(_value_case_insensitive(reading, "Date"))
@@ -446,6 +503,8 @@ class CzechPyEcotrendIsta(PyEcotrendIsta):
                     continue
 
                 day = reading_date.date()
+                if not start <= day <= today:
+                    continue
                 current = grouped_daily[sensor_type].get(day)
                 if current is None:
                     grouped_daily[sensor_type][day] = {
@@ -456,9 +515,7 @@ class CzechPyEcotrendIsta(PyEcotrendIsta):
                 elif current["unit"] == unit:
                     current["value"] += value
                     if cumulative_value is not None:
-                        current["cumulative_value"] = (
-                            (current["cumulative_value"] or Decimal("0")) + cumulative_value
-                        )
+                        current["cumulative_value"] = (current["cumulative_value"] or Decimal("0")) + cumulative_value
                 else:
                     _LOGGER.debug(
                         "Skipping Czech ista %s daily value with incompatible units %s/%s",
@@ -481,9 +538,7 @@ class CzechPyEcotrendIsta(PyEcotrendIsta):
                     {
                         "date": day.isoformat(),
                         "value": _decimal_string(value),
-                        "cumulative_value": (
-                            _decimal_string(cumulative_value) if cumulative_value is not None else None
-                        ),
+                        "cumulative_value": (_decimal_string(cumulative_value) if cumulative_value is not None else None),
                     }
                 )
                 monthly_values[(day.year, day.month)] += value
@@ -557,6 +612,8 @@ class CzechPyEcotrendIsta(PyEcotrendIsta):
             sensor_type = _classify_meter(meter, meter_type)
             if not meter_type or not sensor_type or meter_type.casefold() in requested_types:
                 continue
+            if len(requested_types) >= _MAX_METER_TYPES:
+                break
             requested_types.add(meter_type.casefold())
 
             readings_list = self._get_readings(meter_type, start, today)
@@ -573,8 +630,14 @@ class CzechPyEcotrendIsta(PyEcotrendIsta):
             readings = _value_case_insensitive(readings_list, "Readings", [])
             if not isinstance(readings, list):
                 continue
+            if len(readings) > _MAX_READINGS_PER_RESPONSE:
+                _LOGGER.warning(
+                    "Ignoring %s excess Czech ista monthly readings for meter type %s",
+                    len(readings) - _MAX_READINGS_PER_RESPONSE,
+                    meter_type,
+                )
 
-            for reading in readings:
+            for reading in readings[:_MAX_READINGS_PER_RESPONSE]:
                 if not isinstance(reading, dict):
                     continue
                 reading_date = _parse_reading_date(
@@ -582,6 +645,15 @@ class CzechPyEcotrendIsta(PyEcotrendIsta):
                 )
                 value = _as_decimal(_value_case_insensitive(reading, "Value"))
                 if reading_date is None or value is None:
+                    continue
+                if (
+                    not (start.year, start.month)
+                    <= (reading_date.year, reading_date.month)
+                    <= (
+                        today.year,
+                        today.month,
+                    )
+                ):
                     continue
 
                 values_for_month = grouped[(reading_date.year, reading_date.month)]

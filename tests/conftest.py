@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC
-from enum import Enum, IntEnum, StrEnum
+from enum import IntEnum, StrEnum
 from pathlib import Path
 import sys
 import types
@@ -104,7 +104,7 @@ const.CONF_PASSWORD = "password"
 const.CONF_SCAN_INTERVAL = "scan_interval"
 
 
-class Platform(str, Enum):
+class Platform(StrEnum):
     """Mimic Home Assistant's Platform enum with the attributes required by the integration."""
 
     SENSOR = "sensor"
@@ -132,6 +132,7 @@ sensor_component = _ensure_module("homeassistant.components.sensor")
 class SensorDeviceClass(StrEnum):
     """Sensor device classes used by the integration."""
 
+    DATE = "date"
     WATER = "water"
 
 
@@ -182,6 +183,7 @@ class RegistryEntry:
     """Simplified registry entry used during migration tests."""
 
     def __init__(self, *, entity_id: str = "", unique_id: str = "", domain: str = "sensor", platform: str = "sensor") -> None:
+        """Store registry entry fields used by migration tests."""
         self.entity_id = entity_id
         self.unique_id = unique_id
         self.domain = domain
@@ -196,10 +198,12 @@ class _EntityRegistry:
 
 
 async def async_migrate_entries(*_args: Any, **_kwargs: Any) -> None:  # pragma: no cover - behaviour not exercised
+    """Stand in for Home Assistant entity registry migration."""
     return None
 
 
 def async_get(_hass: Any) -> _EntityRegistry:
+    """Return the shared entity registry stub."""
     return _EntityRegistry()
 
 
@@ -218,6 +222,7 @@ class NumberSelectorConfig:
     """Store configuration for a number selector."""
 
     def __init__(self, **kwargs: Any) -> None:
+        """Store selector configuration."""
         self.config = kwargs
 
 
@@ -225,6 +230,7 @@ class NumberSelector:
     """Stub for the Home Assistant NumberSelector."""
 
     def __init__(self, _config: NumberSelectorConfig) -> None:
+        """Store the number selector configuration."""
         self.config = _config
 
 
@@ -238,6 +244,7 @@ class SelectOptionDict(dict):
     """Simple dictionary implementation matching Home Assistant's structure."""
 
     def __init__(self, *, value: str, label: str) -> None:
+        """Store a select option value and label."""
         super().__init__(value=value, label=label)
 
 
@@ -245,6 +252,7 @@ class SelectSelectorConfig:
     """Configuration for a select selector."""
 
     def __init__(self, **kwargs: Any) -> None:
+        """Store selector configuration."""
         self.config = kwargs
 
 
@@ -252,6 +260,7 @@ class SelectSelector:
     """Stub for the SelectSelector."""
 
     def __init__(self, _config: SelectSelectorConfig) -> None:
+        """Store the select selector configuration."""
         self.config = _config
 
 
@@ -267,6 +276,7 @@ class TextSelectorConfig:
     """Configuration container for text selectors."""
 
     def __init__(self, **kwargs: Any) -> None:
+        """Store selector configuration."""
         self.config = kwargs
 
 
@@ -274,6 +284,7 @@ class TextSelector:
     """Stub for the TextSelector."""
 
     def __init__(self, _config: TextSelectorConfig) -> None:
+        """Store the text selector configuration."""
         self.config = _config
 
 
@@ -296,6 +307,7 @@ class DataUpdateCoordinator:
     """Simplified DataUpdateCoordinator stub."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Store coordinator arguments used by tests."""
         self.hass = kwargs.get("hass")
         self.logger = kwargs.get("logger")
         self.name = kwargs.get("name")
@@ -307,6 +319,10 @@ class DataUpdateCoordinator:
         """Store updated data."""
 
         self.data = data
+
+
+class UpdateFailed(Exception):
+    """Represent a failed coordinator update."""
 
 
 class CoordinatorEntity:
@@ -324,6 +340,7 @@ class CoordinatorEntity:
 
 update_coordinator.DataUpdateCoordinator = DataUpdateCoordinator
 update_coordinator.CoordinatorEntity = CoordinatorEntity
+update_coordinator.UpdateFailed = UpdateFailed
 helpers.update_coordinator = update_coordinator
 
 storage = _ensure_module("homeassistant.helpers.storage")
@@ -412,13 +429,16 @@ class CustomRaw:
     """Lightweight stand-in for the CustomRaw helper object."""
 
     def __init__(self, data: dict[str, Any]) -> None:
+        """Store the serialized consumption data."""
         self._data = data
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> CustomRaw:
+        """Build a stub instance from serialized data."""
         return cls(data)
 
     def to_dict(self) -> dict[str, Any]:
+        """Return the serialized consumption data."""
         return self._data
 
 
@@ -431,18 +451,23 @@ class PyEcotrendIsta:  # pragma: no cover - replaced by tests when required
     """Minimal stub for the external API client."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Store client constructor arguments."""
         self.kwargs = kwargs
 
     def login(self) -> None:  # pragma: no cover - replaced by monkeypatch in tests
+        """Represent the external client login call."""
         raise NotImplementedError
 
     def get_support_code(self) -> str:  # pragma: no cover - default helper
+        """Return a deterministic support code."""
         return "SC"
 
     def getUUIDs(self) -> list[str]:  # pragma: no cover - not used
+        """Return no consumption unit identifiers by default."""
         return []
 
     def consum_raw(self, *_args: Any, **_kwargs: Any) -> dict[str, Any]:  # pragma: no cover - not used
+        """Return an empty raw consumption payload."""
         return {}
 
 
@@ -473,22 +498,27 @@ def Email():
 
 
 def Schema(schema: Any, **_kwargs: Any) -> Any:  # pragma: no cover - behaviour not required for tests
+    """Return the supplied schema unchanged."""
     return schema
 
 
 def Required(key: Any, default: Any | None = None) -> Any:  # pragma: no cover - helper for schema construction
+    """Return a required schema key."""
     return key
 
 
 def Optional(key: Any, default: Any | None = None) -> Any:  # pragma: no cover - helper for schema construction
+    """Return an optional schema key."""
     return key
 
 
 def Remove(key: Any) -> Any:  # pragma: no cover - helper for schema construction
+    """Return a removable schema key."""
     return key
 
 
 def Any(*values: Any) -> Any:  # pragma: no cover - helper for schema construction
+    """Return accepted schema values."""
     return values
 
 
@@ -521,6 +551,7 @@ class Session:  # pragma: no cover - only used for instantiation
     """Minimal requests Session stub."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Store session constructor arguments."""
         self.args = args
         self.kwargs = kwargs
 
