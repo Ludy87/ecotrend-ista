@@ -276,6 +276,7 @@ class CzechAggregateSensor(CzechEcotrendSensorEntity):
         coordinator: IstaDataUpdateCoordinator,
         consumption_type: str,
         period: str,
+        translation_key: str,
     ) -> None:
         """Initialize an aggregate sensor."""
         super().__init__(coordinator)
@@ -290,7 +291,7 @@ class CzechAggregateSensor(CzechEcotrendSensorEntity):
             and _unit(initial_aggregate.get("unit"), consumption_type) == _HEATING_UNIT
         )
         self._attr_translation_key = (
-            _AGGREGATE_TRANSLATION_KEYS[(consumption_type, period)]
+            translation_key
             if consumption_type != "heating" or self._uses_translated_heating_unit
             else _HEATING_NATIVE_UNIT_TRANSLATION_KEYS[period]
         )
@@ -412,8 +413,8 @@ def create_czech_sensor_entities(
 
     available_types = _available_consumption_types(data)
     entities.extend(
-        CzechAggregateSensor(coordinator, consumption_type, period)
-        for consumption_type, period in _AGGREGATE_TRANSLATION_KEYS
+        CzechAggregateSensor(coordinator, consumption_type, period, translation_key)
+        for (consumption_type, period), translation_key in _AGGREGATE_TRANSLATION_KEYS.items()
         if consumption_type in available_types
     )
     entities.append(CzechDataFreshnessSensor(coordinator))

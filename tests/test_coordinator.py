@@ -105,7 +105,7 @@ def test_czech_update_uses_home_assistant_payload_and_syncs_statistics(monkeypat
         options = {"URL": "cz_url", "update_interval": 24}
 
     class CoordinatorHass:
-        async def async_add_executor_job(self, func, *args: Any) -> Any:
+        async def async_add_executor_job(self, func, *args: Any) -> Any:  # NOSONAR - Implements an awaited test API.
             return func(*args)
 
     payload = {
@@ -130,12 +130,14 @@ def test_czech_update_uses_home_assistant_payload_and_syncs_statistics(monkeypat
     controller_instance = CzechController()
     data_coordinator = IstaDataUpdateCoordinator(CoordinatorHass(), DummyEntry())
 
-    async def fake_init() -> None:
+    async def fake_init() -> None:  # NOSONAR - Replaces an awaited coordinator method.
         data_coordinator.controller = controller_instance
 
     synced: dict[str, Any] = {}
 
-    async def fake_sync(_hass, account_id: str, aggregates: dict[str, Any]) -> None:
+    async def fake_sync(  # NOSONAR - Replaces an awaited statistics hook.
+        _hass, account_id: str, aggregates: dict[str, Any]
+    ) -> None:
         synced["account_id"] = account_id
         synced["aggregates"] = aggregates
 
@@ -174,7 +176,7 @@ def test_german_update_keeps_legacy_consumption_path(monkeypatch, tmp_path: Path
         def get_support_code(self) -> str:
             return "support"
 
-    async def fake_init() -> None:
+    async def fake_init() -> None:  # NOSONAR - Replaces an awaited coordinator method.
         data_coordinator.controller = GermanController()
 
     monkeypatch.setattr(data_coordinator, "init", fake_init)
@@ -195,7 +197,7 @@ def test_czech_first_refresh_reuses_setup_login(monkeypatch) -> None:
         options = {"URL": "cz_url", "update_interval": 24}
 
     class CoordinatorHass:
-        async def async_add_executor_job(self, func, *args: Any) -> Any:
+        async def async_add_executor_job(self, func, *args: Any) -> Any:  # NOSONAR - Implements an awaited test API.
             return func(*args)
 
     class LoggedInController:
@@ -213,7 +215,7 @@ def test_czech_first_refresh_reuses_setup_login(monkeypatch) -> None:
     async def unexpected_init() -> None:
         raise AssertionError("The initial Czech login should be reused")
 
-    async def fake_sync(*_args: Any, **_kwargs: Any) -> None:
+    async def fake_sync(*_args: Any, **_kwargs: Any) -> None:  # NOSONAR - Replaces an awaited statistics hook.
         return None
 
     monkeypatch.setattr(data_coordinator, "init", unexpected_init)
@@ -233,7 +235,7 @@ def test_timeout_marks_coordinator_refresh_as_failed() -> None:
         options = {"URL": "cz_url", "update_interval": 24}
 
     class CoordinatorHass:
-        async def async_add_executor_job(self, func, *args: Any) -> Any:
+        async def async_add_executor_job(self, func, *args: Any) -> Any:  # NOSONAR - Implements an awaited test API.
             return func(*args)
 
     class TimedOutController:
@@ -245,5 +247,7 @@ def test_timeout_marks_coordinator_refresh_as_failed() -> None:
     data_coordinator = IstaDataUpdateCoordinator(CoordinatorHass(), DummyEntry())
     data_coordinator.controller = TimedOutController()
 
+    update = data_coordinator._async_update_data()
+
     with pytest.raises(coordinator.UpdateFailed):
-        asyncio.run(data_coordinator._async_update_data())
+        asyncio.run(update)

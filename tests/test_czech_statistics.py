@@ -147,10 +147,12 @@ def test_async_sync_reimports_correction_and_future_sums(monkeypatch) -> None:
         def __init__(self, _hass: Any, _version: int, key: str) -> None:
             type(self).key = key
 
-        async def async_load(self) -> dict[str, Any]:
+        async def async_load(self) -> dict[str, Any]:  # NOSONAR - Fake mirrors Home Assistant's async Store API.
             return self.loaded
 
-        async def async_save(self, data: dict[str, Any]) -> None:
+        async def async_save(  # NOSONAR - Fake mirrors Home Assistant's async Store API.
+            self, data: dict[str, Any]
+        ) -> None:
             type(self).saved = data
 
     imports: list[tuple[dict[str, Any], list[dict[str, Any]]]] = []

@@ -353,11 +353,11 @@ class Store:  # pragma: no cover - replaced by statistics tests
         """Initialize empty in-memory storage."""
         self.data = None
 
-    async def async_load(self):
+    async def async_load(self):  # NOSONAR - Stub mirrors Home Assistant's async Store API.
         """Return no persisted data by default."""
         return self.data
 
-    async def async_save(self, data: Any) -> None:
+    async def async_save(self, data: Any) -> None:  # NOSONAR - Stub mirrors Home Assistant's async Store API.
         """Store data in memory."""
         self.data = data
 

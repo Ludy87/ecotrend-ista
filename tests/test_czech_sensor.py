@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import Any
+from typing import Any, cast
 
+from custom_components.ecotrend_ista.coordinator import IstaDataUpdateCoordinator
 from custom_components.ecotrend_ista.czech_sensor import (
     CzechAggregateSensor,
     CzechDataFreshnessSensor,
@@ -12,6 +13,7 @@ from custom_components.ecotrend_ista.czech_sensor import (
     create_czech_sensor_entities,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+import pytest
 
 
 class DummyController:
@@ -38,6 +40,11 @@ class DummyCoordinator:
         self.controller = DummyController()
         self.czech_data = payload
         self.data = payload
+
+
+def _coordinator(payload: dict[str, Any]) -> IstaDataUpdateCoordinator:
+    """Return the structurally compatible sensor coordinator test double."""
+    return cast(IstaDataUpdateCoordinator, DummyCoordinator(payload))
 
 
 def _payload() -> dict[str, Any]:
@@ -123,7 +130,7 @@ def _payload() -> dict[str, Any]:
 
 def test_create_czech_entities_exposes_five_meters_and_six_aggregates() -> None:
     """The Czech account should create the requested 11 stable entities."""
-    coordinator = DummyCoordinator(_payload())
+    coordinator = _coordinator(_payload())
 
     entities = create_czech_sensor_entities(coordinator)
     physical = [entity for entity in entities if isinstance(entity, CzechPhysicalMeterSensor)]
@@ -141,14 +148,14 @@ def test_create_czech_entities_exposes_five_meters_and_six_aggregates() -> None:
 
 def test_physical_meter_values_and_metadata_follow_coordinator_updates() -> None:
     """Physical sensors should update dynamically without recreating entities."""
-    coordinator = DummyCoordinator(_payload())
+    coordinator = _coordinator(_payload())
     entities = create_czech_sensor_entities(coordinator)
     heating = next(entity for entity in entities if isinstance(entity, CzechPhysicalMeterSensor) and entity._meter_id == "101")
     warmwater = next(
         entity for entity in entities if isinstance(entity, CzechPhysicalMeterSensor) and entity._meter_id == "201"
     )
 
-    assert heating.native_value == 120.5
+    assert heating.native_value == pytest.approx(120.5)
     assert heating._attr_translation_key == "czech_heating_meter"
     assert heating._attr_translation_placeholders == {"detail": "Obývací pokoj (H-1)"}
     assert heating.native_unit_of_measurement is None
@@ -161,12 +168,12 @@ def test_physical_meter_values_and_metadata_follow_coordinator_updates() -> None
     coordinator.czech_data["meters"] = [
         {**meter, "value": "130.25"} if meter["id"] == "101" else meter for meter in coordinator.czech_data["meters"]
     ]
-    assert heating.native_value == 130.25
+    assert heating.native_value == pytest.approx(130.25)
 
 
 def test_aggregate_sensors_report_period_values_without_history_attributes() -> None:
     """Daily and monthly sensors should expose only their latest interval."""
-    coordinator = DummyCoordinator(_payload())
+    coordinator = _coordinator(_payload())
     entities = create_czech_sensor_entities(coordinator)
     daily = next(
         entity
@@ -179,7 +186,7 @@ def test_aggregate_sensors_report_period_values_without_history_attributes() -> 
         if isinstance(entity, CzechAggregateSensor) and entity._consumption_type == "water" and entity._period == "monthly"
     )
 
-    assert daily.native_value == 3.5
+    assert daily.native_value == pytest.approx(3.5)
     assert daily._attr_translation_key == "czech_heating_daily"
     assert daily.native_unit_of_measurement is None
     assert not hasattr(daily, "_attr_state_class")
@@ -191,21 +198,21 @@ def test_aggregate_sensors_report_period_values_without_history_attributes() -> 
     assert daily_attributes["data_through"] == "2026-07-15"
     assert isinstance(daily_attributes["delay_days"], int)
     assert daily_attributes["external_statistic_id"] == "ecotrend_ista:cz_42_heating_daily"
-    assert monthly.native_value == 2.4
+    assert monthly.native_value == pytest.approx(2.4)
     assert monthly._attr_translation_key == "czech_cold_water_monthly"
     assert monthly.native_unit_of_measurement == "m³"
     assert "daily" not in monthly.extra_state_attributes
     assert "monthly" not in monthly.extra_state_attributes
 
     coordinator.czech_data["aggregates"]["water"]["monthly_value"] = "3.1"
-    assert monthly.native_value == 3.1
+    assert monthly.native_value == pytest.approx(3.1)
 
 
 def test_data_freshness_uses_oldest_latest_date_across_consumption_types() -> None:
     """The displayed cutoff date must be valid for every available type."""
     payload = _payload()
     payload["aggregates"]["heating"]["daily_date"] = "2026-07-14"
-    coordinator = DummyCoordinator(payload)
+    coordinator = _coordinator(payload)
     freshness = next(
         entity for entity in create_czech_sensor_entities(coordinator) if isinstance(entity, CzechDataFreshnessSensor)
     )
@@ -223,7 +230,7 @@ def test_data_freshness_is_unknown_when_an_expected_type_has_no_history() -> Non
     """The shared cutoff must not hide a missing history for an installed type."""
     payload = _payload()
     del payload["aggregates"]["heating"]
-    coordinator = DummyCoordinator(payload)
+    coordinator = _coordinator(payload)
     freshness = next(
         entity for entity in create_czech_sensor_entities(coordinator) if isinstance(entity, CzechDataFreshnessSensor)
     )
@@ -238,7 +245,7 @@ def test_aggregate_entities_are_only_created_for_installed_consumption_types() -
     payload["meters"] = [meter for meter in payload["meters"] if meter["type"] == "water"]
     payload["aggregates"] = {"water": payload["aggregates"]["water"]}
 
-    entities = create_czech_sensor_entities(DummyCoordinator(payload))
+    entities = create_czech_sensor_entities(_coordinator(payload))
     aggregates = [entity for entity in entities if isinstance(entity, CzechAggregateSensor)]
 
     assert len(entities) == 4
@@ -256,7 +263,7 @@ def test_heating_energy_meter_keeps_its_native_unit() -> None:
             meter["unit"] = "kWh"
     payload["aggregates"]["heating"]["unit"] = "kWh"
 
-    entities = create_czech_sensor_entities(DummyCoordinator(payload))
+    entities = create_czech_sensor_entities(_coordinator(payload))
     meter = next(entity for entity in entities if isinstance(entity, CzechPhysicalMeterSensor))
     daily = next(
         entity

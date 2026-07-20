@@ -325,6 +325,7 @@ def test_login_and_normalize_readings() -> None:
     client.login()
     consumption_data = client.get_consumption_data()
 
+    assert CZECH_TOKEN_URL.startswith("https://")
     assert session.post_calls[0][0] == CZECH_TOKEN_URL
     token_form = session.post_calls[0][1]
     assert set(token_form) == {"grant_type", "username", "password", "value1", "value2"}

@@ -38,7 +38,9 @@ _MAX_RENDERED_DECIMAL_DIGITS = 40
 _MAX_RENDERED_DECIMAL_ADJUSTED_EXPONENT = 24
 _MIN_DECIMAL_EXPONENT = -12
 _DOTNET_DATE = re.compile(r"^/Date\((?P<milliseconds>-?\d+)")
-_LOGIN_KDF_PASSWORD = "P@%5w0r]>3mll04##22"
+# Public protocol input copied from the provider's Unity client. It is not an
+# account credential, and every byte is required for a compatible login proof.
+_LOGIN_KDF_INPUT = "P@%5w0r]>3mll04##22"  # NOSONAR
 _LOGIN_KDF_SALT = "(&(HBB%J&Y*B1-3mll04##22"
 _CUBIC_METRE_UNITS = {"cbm", "cubicmeter", "cubicmetre", "m3", "m³"}
 _HEATING_UNIT_ALIASES = {
@@ -107,12 +109,14 @@ def _dotnet_timestamp(value: datetime) -> str:
 
 def _login_proofs(username: str, password: str, now: datetime | None = None) -> tuple[str, str]:
     """Build the two encrypted form values required by the current Czech login endpoint."""
+    # SHA-1 is part of the provider's legacy PBKDF2 wire protocol here. This
+    # derivation does not store passwords or provide transport security (TLS does).
     key_material = PBKDF2HMAC(
-        algorithm=hashes.SHA1(),
+        algorithm=hashes.SHA1(),  # NOSONAR
         length=96,
         salt=_LOGIN_KDF_SALT.encode("ascii"),
         iterations=1000,
-    ).derive(_LOGIN_KDF_PASSWORD.encode("ascii"))
+    ).derive(_LOGIN_KDF_INPUT.encode("ascii"))
 
     # The Unity client first consumes one Rijndael key/IV pair, then uses the
     # second pair for AesCryptoServiceProvider and the transmitted values.
@@ -123,7 +127,9 @@ def _login_proofs(username: str, password: str, now: datetime | None = None) -> 
     def encrypt(value: str) -> str:
         padder = padding.PKCS7(128).padder()
         padded = padder.update(f"{value}_{timestamp}".encode()) + padder.finalize()
-        encryptor = Cipher(algorithms.AES(key), modes.CBC(initialization_vector)).encryptor()
+        # The fixed CBC framing is likewise mandated by the provider's request
+        # format; changing its mode or IV would make the login proof invalid.
+        encryptor = Cipher(algorithms.AES(key), modes.CBC(initialization_vector)).encryptor()  # NOSONAR
         encrypted = encryptor.update(padded) + encryptor.finalize()
         return "".join(f"_{byte}" for byte in encrypted)
 
@@ -270,6 +276,311 @@ def _classify_meter(meter: dict[str, Any], meter_type: str) -> str | None:
     return None
 
 
+def _meter_descriptor(meter: dict[str, Any]) -> tuple[str, str] | None:
+    """Return the provider and normalized types for a supported meter."""
+    meter_type = str(_value_case_insensitive(meter, "MeterType", "")).strip().lower()
+    sensor_type = _classify_meter(meter, meter_type)
+    if not meter_type or not sensor_type:
+        return None
+    return meter_type, sensor_type
+
+
+def _meter_identifier(meter: dict[str, Any], meter_type: str, index: int) -> str:
+    """Return the provider meter ID, with a stable fallback for incomplete records."""
+    meter_id = _value_case_insensitive(meter, "METER_ID")
+    if meter_id:
+        return _identifier_string(meter_id)
+
+    fallback_parts = [
+        _identifier_string(part)
+        for part in (
+            _value_case_insensitive(meter, "METER_NO"),
+            _value_case_insensitive(meter, "INST_NO"),
+        )
+        if part not in (None, "")
+    ]
+    return "-".join(fallback_parts) or f"{meter_type}-{index}"
+
+
+def _normalized_meter(
+    meter: dict[str, Any],
+    index: int,
+    meter_type: str,
+    sensor_type: str,
+) -> dict[str, Any]:
+    """Normalize one physical meter to the Home Assistant payload shape."""
+    reading_date = _parse_reading_date(_value_case_insensitive(meter, "Reading_date"))
+    last_reading = _as_decimal(_value_case_insensitive(meter, "Last_Meter_Reading"))
+    last_consumption = _as_decimal(_value_case_insensitive(meter, "Last_Meter_Consumption"))
+    return {
+        "id": _meter_identifier(meter, meter_type, index),
+        "type": sensor_type,
+        "meter_type": meter_type,
+        "meter_number": str(_value_case_insensitive(meter, "METER_NO", "") or ""),
+        "installation_number": _identifier_string(_value_case_insensitive(meter, "INST_NO", "") or ""),
+        "room": str(_value_case_insensitive(meter, "ROOM_DESCR", "") or ""),
+        "label": str(
+            _value_case_insensitive(
+                meter,
+                "Headline",
+                _value_case_insensitive(meter, "MeterText", ""),
+            )
+            or ""
+        ),
+        "category": str(_value_case_insensitive(meter, "METCAT_LABEL", "") or ""),
+        "unit": _normalize_unit(_value_case_insensitive(meter, "Unit", ""), sensor_type),
+        "value": _decimal_string(last_reading) if last_reading is not None else None,
+        "last_consumption": _decimal_string(last_consumption) if last_consumption is not None else None,
+        "reading_date": reading_date.isoformat() if reading_date is not None else None,
+        "activation_date": _value_case_insensitive(meter, "Activation_date"),
+        "deactivation_date": _value_case_insensitive(meter, "Deactivation_date"),
+    }
+
+
+def _normalized_meters(meters: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Normalize every supported physical meter."""
+    normalized: list[dict[str, Any]] = []
+    for index, meter in enumerate(meters, start=1):
+        descriptor = _meter_descriptor(meter)
+        if descriptor is None:
+            continue
+        normalized.append(_normalized_meter(meter, index, *descriptor))
+    return normalized
+
+
+def _supported_meter_types(meters: list[dict[str, Any]]) -> dict[str, tuple[str, dict[str, Any]]]:
+    """Return the first bounded set of unique supported provider meter types."""
+    meter_types: dict[str, tuple[str, dict[str, Any]]] = {}
+    for meter in meters:
+        descriptor = _meter_descriptor(meter)
+        if descriptor is None:
+            continue
+        meter_type, sensor_type = descriptor
+        meter_type_key = meter_type.casefold()
+        if meter_type_key in meter_types:
+            continue
+        if len(meter_types) >= _MAX_METER_TYPES:
+            break
+        meter_types[meter_type_key] = (sensor_type, meter)
+    return meter_types
+
+
+def _reading_series(
+    readings_list: dict[str, Any] | None,
+    meter: dict[str, Any],
+    sensor_type: str,
+    meter_type: str,
+    period_name: str,
+) -> tuple[str, list[Any]] | None:
+    """Return a normalized, bounded reading series from a provider response."""
+    if not readings_list:
+        return None
+    unit = _normalize_unit(
+        _value_case_insensitive(
+            readings_list,
+            "Unit",
+            _value_case_insensitive(meter, "Unit", ""),
+        ),
+        sensor_type,
+    )
+    readings = _value_case_insensitive(readings_list, "Readings", [])
+    if not isinstance(readings, list):
+        return None
+    if len(readings) > _MAX_READINGS_PER_RESPONSE:
+        _LOGGER.warning(
+            "Ignoring %s excess Czech ista %s readings for meter type %s",
+            len(readings) - _MAX_READINGS_PER_RESPONSE,
+            period_name,
+            meter_type,
+        )
+    return unit, readings[:_MAX_READINGS_PER_RESPONSE]
+
+
+def _daily_reading(
+    reading: Any,
+    start: date,
+    end: date,
+) -> tuple[date, Decimal, Decimal | None] | None:
+    """Parse one in-range daily provider reading."""
+    if not isinstance(reading, dict):
+        return None
+    reading_date = _parse_reading_date(_value_case_insensitive(reading, "Date"))
+    value = _as_decimal(_value_case_insensitive(reading, "Value"))
+    if reading_date is None or value is None:
+        return None
+    day = reading_date.date()
+    if not start <= day <= end:
+        return None
+    cumulative_value = _as_decimal(_value_case_insensitive(reading, "AkkumulativValue"))
+    return day, value, cumulative_value
+
+
+def _merge_daily_reading(
+    grouped: dict[str, dict[date, dict[str, Any]]],
+    sensor_type: str,
+    day: date,
+    value: Decimal,
+    cumulative_value: Decimal | None,
+    unit: str,
+) -> None:
+    """Merge one daily reading, rejecting incompatible units."""
+    current = grouped[sensor_type].get(day)
+    if current is None:
+        grouped[sensor_type][day] = {
+            "value": value,
+            "cumulative_value": cumulative_value,
+            "unit": unit,
+        }
+        return
+    if current["unit"] != unit:
+        _LOGGER.debug(
+            "Skipping Czech ista %s daily value with incompatible units %s/%s",
+            sensor_type,
+            current["unit"],
+            unit,
+        )
+        return
+
+    current["value"] += value
+    if cumulative_value is not None:
+        current["cumulative_value"] = (current["cumulative_value"] or Decimal("0")) + cumulative_value
+
+
+def _daily_history(
+    values_by_day: dict[date, dict[str, Any]],
+) -> tuple[list[dict[str, Any]], dict[tuple[int, int], Decimal], str]:
+    """Serialize daily readings and calculate their monthly totals."""
+    daily: list[dict[str, Any]] = []
+    monthly_values: dict[tuple[int, int], Decimal] = defaultdict(Decimal)
+    unit = ""
+    for day, values in sorted(values_by_day.items()):
+        unit = str(values["unit"])
+        value = values["value"]
+        cumulative_value = values["cumulative_value"]
+        daily.append(
+            {
+                "date": day.isoformat(),
+                "value": _decimal_string(value),
+                "cumulative_value": _decimal_string(cumulative_value) if cumulative_value is not None else None,
+            }
+        )
+        monthly_values[(day.year, day.month)] += value
+    return daily, monthly_values, unit
+
+
+def _aggregate_summary(
+    unit: str,
+    daily: list[dict[str, Any]],
+    monthly: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Return the latest values alongside the complete bounded histories."""
+    latest_daily = daily[-1] if daily else {}
+    latest_monthly = monthly[-1] if monthly else {}
+    return {
+        "unit": unit,
+        "daily": daily,
+        "monthly": monthly,
+        "daily_value": latest_daily.get("value"),
+        "daily_date": latest_daily.get("date"),
+        "monthly_value": latest_monthly.get("value"),
+        "monthly_year": latest_monthly.get("year"),
+        "monthly_month": latest_monthly.get("month"),
+        "cumulative_value": latest_daily.get("cumulative_value"),
+    }
+
+
+def _build_aggregates(
+    grouped_daily: dict[str, dict[date, dict[str, Any]]],
+) -> tuple[dict[str, dict[str, Any]], dict[tuple[int, int], dict[str, tuple[Decimal, str]]]]:
+    """Build sensor aggregates and the reusable consumption history."""
+    aggregates: dict[str, dict[str, Any]] = {}
+    monthly_consumptions: dict[tuple[int, int], dict[str, tuple[Decimal, str]]] = defaultdict(dict)
+    for sensor_type, values_by_day in grouped_daily.items():
+        daily, monthly_values, unit = _daily_history(values_by_day)
+        monthly = [
+            {
+                "year": year,
+                "month": month,
+                "value": _decimal_string(value),
+            }
+            for (year, month), value in sorted(monthly_values.items())
+        ]
+        for (year, month), value in monthly_values.items():
+            monthly_consumptions[(year, month)][sensor_type] = (value, unit)
+        aggregates[sensor_type] = _aggregate_summary(unit, daily, monthly)
+    return aggregates, monthly_consumptions
+
+
+def _consumption_reading(sensor_type: str, value: Decimal, unit: str) -> dict[str, Any]:
+    """Return one reading in the German API shape reused by the integration."""
+    return {
+        "type": sensor_type,
+        "value": _decimal_string(value),
+        "unit": unit,
+        "additionalValue": None,
+        "additionalUnit": unit,
+        "estimated": False,
+        "comparedConsumption": None,
+        "comparedCost": None,
+        "averageConsumption": None,
+    }
+
+
+def _consumption_history(
+    grouped: dict[tuple[int, int], dict[str, tuple[Decimal, str]]],
+) -> list[dict[str, Any]]:
+    """Serialize grouped monthly readings in reverse chronological order."""
+    return [
+        {
+            "date": {"month": month, "year": year},
+            "readings": [_consumption_reading(sensor_type, value, unit) for sensor_type, (value, unit) in values.items()],
+        }
+        for (year, month), values in sorted(grouped.items(), reverse=True)
+    ]
+
+
+def _monthly_reading(
+    reading: Any,
+    start: date,
+    end: date,
+) -> tuple[tuple[int, int], Decimal] | None:
+    """Parse one in-range monthly provider reading."""
+    if not isinstance(reading, dict):
+        return None
+    reading_date = _parse_reading_date(_value_case_insensitive(reading, "Date", _value_case_insensitive(reading, "Name")))
+    value = _as_decimal(_value_case_insensitive(reading, "Value"))
+    if reading_date is None or value is None:
+        return None
+    month = (reading_date.year, reading_date.month)
+    if not (start.year, start.month) <= month <= (end.year, end.month):
+        return None
+    return month, value
+
+
+def _merge_monthly_reading(
+    grouped: dict[tuple[int, int], dict[str, tuple[Decimal, str]]],
+    month: tuple[int, int],
+    sensor_type: str,
+    value: Decimal,
+    unit: str,
+) -> None:
+    """Merge one monthly reading, rejecting incompatible units."""
+    values_for_month = grouped[month]
+    current = values_for_month.get(sensor_type)
+    if current is None:
+        values_for_month[sensor_type] = (value, unit)
+        return
+    if current[1] != unit:
+        _LOGGER.debug(
+            "Skipping duplicate Czech ista %s value with incompatible units %s/%s",
+            sensor_type,
+            current[1],
+            unit,
+        )
+        return
+    values_for_month[sensor_type] = (current[0] + value, unit)
+
+
 class CzechPyEcotrendIsta(PyEcotrendIsta):
     """Expose the Czech/Nordic service through the interface used by the integration."""
 
@@ -413,184 +724,77 @@ class CzechPyEcotrendIsta(PyEcotrendIsta):
         readings = _unwrap_value(response.json(), "readingsList")
         return readings if isinstance(readings, dict) else None
 
+    def _daily_groups(
+        self,
+        meter_types: dict[str, tuple[str, dict[str, Any]]],
+        start: date,
+        end: date,
+    ) -> dict[str, dict[date, dict[str, Any]]]:
+        """Load, validate and group daily readings for supported meter types."""
+        grouped: dict[str, dict[date, dict[str, Any]]] = defaultdict(dict)
+        for meter_type, (sensor_type, meter) in meter_types.items():
+            series = _reading_series(
+                self._get_readings(meter_type, start, end, _PERIOD_DAILY_HISTORY),
+                meter,
+                sensor_type,
+                meter_type,
+                "daily",
+            )
+            if series is None:
+                continue
+            unit, readings = series
+            for reading in readings:
+                parsed = _daily_reading(reading, start, end)
+                if parsed is None:
+                    continue
+                day, value, cumulative_value = parsed
+                _merge_daily_reading(grouped, sensor_type, day, value, cumulative_value, unit)
+        return grouped
+
+    def _monthly_groups(
+        self,
+        meter_types: dict[str, tuple[str, dict[str, Any]]],
+        start: date,
+        end: date,
+    ) -> dict[tuple[int, int], dict[str, tuple[Decimal, str]]]:
+        """Load, validate and group monthly readings for supported meter types."""
+        grouped: dict[tuple[int, int], dict[str, tuple[Decimal, str]]] = defaultdict(dict)
+        for meter_type, (sensor_type, meter) in meter_types.items():
+            series = _reading_series(
+                self._get_readings(meter_type, start, end),
+                meter,
+                sensor_type,
+                meter_type,
+                "monthly",
+            )
+            if series is None:
+                continue
+            unit, readings = series
+            for reading in readings:
+                parsed = _monthly_reading(reading, start, end)
+                if parsed is None:
+                    continue
+                month, value = parsed
+                _merge_monthly_reading(grouped, month, sensor_type, value, unit)
+        return grouped
+
     def get_home_assistant_data(self) -> dict[str, Any]:
         """Return physical meters and daily/monthly aggregate histories for Home Assistant."""
         if not self._meters:
             self._meters = self._get_meters()
 
-        normalized_meters: list[dict[str, Any]] = []
-        meter_types: dict[str, tuple[str, dict[str, Any]]] = {}
-        for index, meter in enumerate(self._meters, start=1):
-            meter_type = str(_value_case_insensitive(meter, "MeterType", "")).strip().lower()
-            sensor_type = _classify_meter(meter, meter_type)
-            if not meter_type or not sensor_type:
-                continue
-            meter_type_key = meter_type.casefold()
-            if meter_type_key in meter_types or len(meter_types) < _MAX_METER_TYPES:
-                meter_types.setdefault(meter_type_key, (sensor_type, meter))
-
-            meter_id = _value_case_insensitive(meter, "METER_ID")
-            if not meter_id:
-                meter_number = _value_case_insensitive(meter, "METER_NO")
-                installation_number = _value_case_insensitive(meter, "INST_NO")
-                fallback_parts = [
-                    _identifier_string(part) for part in (meter_number, installation_number) if part not in (None, "")
-                ]
-                meter_id = "-".join(fallback_parts) or f"{meter_type}-{index}"
-            reading_date = _parse_reading_date(_value_case_insensitive(meter, "Reading_date"))
-            last_reading = _as_decimal(_value_case_insensitive(meter, "Last_Meter_Reading"))
-            last_consumption = _as_decimal(_value_case_insensitive(meter, "Last_Meter_Consumption"))
-            unit = _normalize_unit(_value_case_insensitive(meter, "Unit", ""), sensor_type)
-            normalized_meters.append(
-                {
-                    "id": _identifier_string(meter_id),
-                    "type": sensor_type,
-                    "meter_type": meter_type,
-                    "meter_number": str(_value_case_insensitive(meter, "METER_NO", "") or ""),
-                    "installation_number": _identifier_string(_value_case_insensitive(meter, "INST_NO", "") or ""),
-                    "room": str(_value_case_insensitive(meter, "ROOM_DESCR", "") or ""),
-                    "label": str(
-                        _value_case_insensitive(
-                            meter,
-                            "Headline",
-                            _value_case_insensitive(meter, "MeterText", ""),
-                        )
-                        or ""
-                    ),
-                    "category": str(_value_case_insensitive(meter, "METCAT_LABEL", "") or ""),
-                    "unit": unit,
-                    "value": _decimal_string(last_reading) if last_reading is not None else None,
-                    "last_consumption": (_decimal_string(last_consumption) if last_consumption is not None else None),
-                    "reading_date": reading_date.isoformat() if reading_date is not None else None,
-                    "activation_date": _value_case_insensitive(meter, "Activation_date"),
-                    "deactivation_date": _value_case_insensitive(meter, "Deactivation_date"),
-                }
-            )
-
         today = date.today()
         start = _add_months(today, -12)
-        grouped_daily: dict[str, dict[date, dict[str, Any]]] = defaultdict(dict)
-
-        for meter_type, (sensor_type, meter) in meter_types.items():
-            readings_list = self._get_readings(meter_type, start, today, _PERIOD_DAILY_HISTORY)
-            if not readings_list:
-                continue
-            unit = _normalize_unit(
-                _value_case_insensitive(
-                    readings_list,
-                    "Unit",
-                    _value_case_insensitive(meter, "Unit", ""),
-                ),
-                sensor_type,
-            )
-            readings = _value_case_insensitive(readings_list, "Readings", [])
-            if not isinstance(readings, list):
-                continue
-            if len(readings) > _MAX_READINGS_PER_RESPONSE:
-                _LOGGER.warning(
-                    "Ignoring %s excess Czech ista daily readings for meter type %s",
-                    len(readings) - _MAX_READINGS_PER_RESPONSE,
-                    meter_type,
-                )
-
-            for reading in readings[:_MAX_READINGS_PER_RESPONSE]:
-                if not isinstance(reading, dict):
-                    continue
-                reading_date = _parse_reading_date(_value_case_insensitive(reading, "Date"))
-                value = _as_decimal(_value_case_insensitive(reading, "Value"))
-                cumulative_value = _as_decimal(_value_case_insensitive(reading, "AkkumulativValue"))
-                if reading_date is None or value is None:
-                    continue
-
-                day = reading_date.date()
-                if not start <= day <= today:
-                    continue
-                current = grouped_daily[sensor_type].get(day)
-                if current is None:
-                    grouped_daily[sensor_type][day] = {
-                        "value": value,
-                        "cumulative_value": cumulative_value,
-                        "unit": unit,
-                    }
-                elif current["unit"] == unit:
-                    current["value"] += value
-                    if cumulative_value is not None:
-                        current["cumulative_value"] = (current["cumulative_value"] or Decimal("0")) + cumulative_value
-                else:
-                    _LOGGER.debug(
-                        "Skipping Czech ista %s daily value with incompatible units %s/%s",
-                        sensor_type,
-                        current["unit"],
-                        unit,
-                    )
-
-        aggregates: dict[str, dict[str, Any]] = {}
-        monthly_consumptions: dict[tuple[int, int], dict[str, tuple[Decimal, str]]] = defaultdict(dict)
-        for sensor_type, values_by_day in grouped_daily.items():
-            daily: list[dict[str, Any]] = []
-            monthly_values: dict[tuple[int, int], Decimal] = defaultdict(Decimal)
-            unit = ""
-            for day, values in sorted(values_by_day.items()):
-                unit = str(values["unit"])
-                value = values["value"]
-                cumulative_value = values["cumulative_value"]
-                daily.append(
-                    {
-                        "date": day.isoformat(),
-                        "value": _decimal_string(value),
-                        "cumulative_value": (_decimal_string(cumulative_value) if cumulative_value is not None else None),
-                    }
-                )
-                monthly_values[(day.year, day.month)] += value
-
-            monthly = [
-                {
-                    "year": year,
-                    "month": month,
-                    "value": _decimal_string(value),
-                }
-                for (year, month), value in sorted(monthly_values.items())
-            ]
-            for (year, month), value in monthly_values.items():
-                monthly_consumptions[(year, month)][sensor_type] = (value, unit)
-
-            aggregates[sensor_type] = {
-                "unit": unit,
-                "daily": daily,
-                "monthly": monthly,
-                "daily_value": daily[-1]["value"] if daily else None,
-                "daily_date": daily[-1]["date"] if daily else None,
-                "monthly_value": monthly[-1]["value"] if monthly else None,
-                "monthly_year": monthly[-1]["year"] if monthly else None,
-                "monthly_month": monthly[-1]["month"] if monthly else None,
-                "cumulative_value": daily[-1]["cumulative_value"] if daily else None,
-            }
-
-        consumptions: list[dict[str, Any]] = []
-        for (year, month), values in sorted(monthly_consumptions.items(), reverse=True):
-            consumptions.append(
-                {
-                    "date": {"month": month, "year": year},
-                    "readings": [
-                        {
-                            "type": sensor_type,
-                            "value": _decimal_string(value),
-                            "unit": unit,
-                            "additionalValue": None,
-                            "additionalUnit": unit,
-                            "estimated": False,
-                            "comparedConsumption": None,
-                            "comparedCost": None,
-                            "averageConsumption": None,
-                        }
-                        for sensor_type, (value, unit) in values.items()
-                    ],
-                }
-            )
-        self._consumption_cache = {"consumptions": consumptions, "costs": []}
+        meter_types = _supported_meter_types(self._meters)
+        grouped_daily = self._daily_groups(meter_types, start, today)
+        aggregates, monthly_consumptions = _build_aggregates(grouped_daily)
+        self._consumption_cache = {
+            "consumptions": _consumption_history(monthly_consumptions),
+            "costs": [],
+        }
 
         return {
-            "meters": normalized_meters,
+            "meters": _normalized_meters(self._meters),
             "aggregates": aggregates,
         }
 
@@ -604,97 +808,10 @@ class CzechPyEcotrendIsta(PyEcotrendIsta):
 
         today = date.today()
         start = _add_months(today, -12)
-        grouped: dict[tuple[int, int], dict[str, tuple[Decimal, str]]] = defaultdict(dict)
-        requested_types: set[str] = set()
-
-        for meter in self._meters:
-            meter_type = str(_value_case_insensitive(meter, "MeterType", "")).strip().lower()
-            sensor_type = _classify_meter(meter, meter_type)
-            if not meter_type or not sensor_type or meter_type.casefold() in requested_types:
-                continue
-            if len(requested_types) >= _MAX_METER_TYPES:
-                break
-            requested_types.add(meter_type.casefold())
-
-            readings_list = self._get_readings(meter_type, start, today)
-            if not readings_list:
-                continue
-            unit = _normalize_unit(
-                _value_case_insensitive(
-                    readings_list,
-                    "Unit",
-                    _value_case_insensitive(meter, "Unit", ""),
-                ),
-                sensor_type,
-            )
-            readings = _value_case_insensitive(readings_list, "Readings", [])
-            if not isinstance(readings, list):
-                continue
-            if len(readings) > _MAX_READINGS_PER_RESPONSE:
-                _LOGGER.warning(
-                    "Ignoring %s excess Czech ista monthly readings for meter type %s",
-                    len(readings) - _MAX_READINGS_PER_RESPONSE,
-                    meter_type,
-                )
-
-            for reading in readings[:_MAX_READINGS_PER_RESPONSE]:
-                if not isinstance(reading, dict):
-                    continue
-                reading_date = _parse_reading_date(
-                    _value_case_insensitive(reading, "Date", _value_case_insensitive(reading, "Name"))
-                )
-                value = _as_decimal(_value_case_insensitive(reading, "Value"))
-                if reading_date is None or value is None:
-                    continue
-                if (
-                    not (start.year, start.month)
-                    <= (reading_date.year, reading_date.month)
-                    <= (
-                        today.year,
-                        today.month,
-                    )
-                ):
-                    continue
-
-                values_for_month = grouped[(reading_date.year, reading_date.month)]
-                current = values_for_month.get(sensor_type)
-                if current is None:
-                    values_for_month[sensor_type] = (value, unit)
-                elif current[1] == unit:
-                    values_for_month[sensor_type] = (current[0] + value, unit)
-                else:
-                    _LOGGER.debug(
-                        "Skipping duplicate Czech ista %s value with incompatible units %s/%s",
-                        sensor_type,
-                        current[1],
-                        unit,
-                    )
-
-        consumptions: list[dict[str, Any]] = []
-        for (year, month), values in sorted(grouped.items(), reverse=True):
-            normalized_readings = [
-                {
-                    "type": sensor_type,
-                    "value": _decimal_string(value),
-                    "unit": unit,
-                    "additionalValue": None,
-                    "additionalUnit": unit,
-                    "estimated": False,
-                    "comparedConsumption": None,
-                    "comparedCost": None,
-                    "averageConsumption": None,
-                }
-                for sensor_type, (value, unit) in values.items()
-            ]
-            consumptions.append(
-                {
-                    "date": {"month": month, "year": year},
-                    "readings": normalized_readings,
-                }
-            )
-
+        meter_types = _supported_meter_types(self._meters)
+        grouped = self._monthly_groups(meter_types, start, today)
         result = {
-            "consumptions": consumptions,
+            "consumptions": _consumption_history(grouped),
             "costs": [],
         }
         self._consumption_cache = result

@@ -90,6 +90,25 @@ def _finite_float(value: Decimal) -> float | None:
     return float_value if math.isfinite(float_value) else None
 
 
+def _normalize_daily_history(daily: Any) -> dict[str, str]:
+    """Normalize persisted daily values while discarding malformed entries."""
+    if not isinstance(daily, Mapping):
+        return {}
+
+    normalized: dict[str, str] = {}
+    for day_value, consumption in daily.items():
+        if not isinstance(day_value, str):
+            continue
+        try:
+            date.fromisoformat(day_value)
+        except ValueError:
+            continue
+        if (decimal_value := _decimal_string(consumption)) is not None:
+            normalized[day_value] = decimal_value
+
+    return normalized
+
+
 def _normalize_store(stored: Mapping[str, Any] | None) -> dict[str, Any]:
     """Normalize persisted data while discarding malformed values."""
     normalized: dict[str, Any] = {"types": {}}
@@ -106,24 +125,61 @@ def _normalize_store(stored: Mapping[str, Any] | None) -> dict[str, Any]:
 
         unit = stored_type.get("unit")
         daily = stored_type.get("daily")
-        normalized_daily: dict[str, str] = {}
-        if isinstance(daily, Mapping):
-            for day_value, consumption in daily.items():
-                if not isinstance(day_value, str):
-                    continue
-                try:
-                    date.fromisoformat(day_value)
-                except ValueError:
-                    continue
-                if (decimal_value := _decimal_string(consumption)) is not None:
-                    normalized_daily[day_value] = decimal_value
 
         normalized["types"][sensor_type] = {
             "unit": unit if isinstance(unit, str) else "",
-            "daily": normalized_daily,
+            "daily": _normalize_daily_history(daily),
         }
 
     return normalized
+
+
+def _parse_daily_reading(item: Any) -> tuple[str, date, str] | None:
+    """Parse one API daily reading or return None when it is malformed."""
+    if not isinstance(item, Mapping):
+        return None
+
+    day_value = item.get("date")
+    if not isinstance(day_value, str):
+        return None
+    try:
+        reading_day = date.fromisoformat(day_value)
+    except ValueError:
+        return None
+
+    value = _decimal_string(item.get("value"))
+    if value is None:
+        return None
+    return day_value, reading_day, value
+
+
+def _merge_aggregate_history(history: dict[str, Any], aggregate: Mapping[str, Any]) -> date | None:
+    """Merge one aggregate and return the earliest changed date."""
+    daily_history: dict[str, str] = history["daily"]
+    earliest_changed: date | None = None
+
+    unit = aggregate.get("unit")
+    if isinstance(unit, str) and unit != history["unit"]:
+        history["unit"] = unit
+        if daily_history:
+            earliest_changed = date.fromisoformat(min(daily_history))
+
+    daily = aggregate.get("daily")
+    if not isinstance(daily, list):
+        return earliest_changed
+
+    for item in daily:
+        reading = _parse_daily_reading(item)
+        if reading is None:
+            continue
+        day_value, reading_day, value = reading
+        if daily_history.get(day_value) == value:
+            continue
+
+        daily_history[day_value] = value
+        earliest_changed = min(earliest_changed, reading_day) if earliest_changed else reading_day
+
+    return earliest_changed
 
 
 def _merge_daily_history(
@@ -133,44 +189,15 @@ def _merge_daily_history(
     """Merge API values into stored history and return earliest changed dates."""
     merged = _normalize_store(stored)
     earliest_changed: dict[str, date] = {}
+    types = merged["types"]
 
     for sensor_type, aggregate in aggregates.items():
         if not isinstance(sensor_type, str) or not isinstance(aggregate, Mapping):
             continue
 
-        types = merged["types"]
         history = types.setdefault(sensor_type, {"unit": "", "daily": {}})
-        daily_history: dict[str, str] = history["daily"]
-
-        unit = aggregate.get("unit")
-        if isinstance(unit, str) and unit != history["unit"]:
-            history["unit"] = unit
-            if daily_history:
-                earliest_changed[sensor_type] = date.fromisoformat(min(daily_history))
-
-        daily = aggregate.get("daily")
-        if not isinstance(daily, list):
-            continue
-
-        for item in daily:
-            if not isinstance(item, Mapping):
-                continue
-            day_value = item.get("date")
-            if not isinstance(day_value, str):
-                continue
-            try:
-                reading_day = date.fromisoformat(day_value)
-            except ValueError:
-                continue
-            if (value := _decimal_string(item.get("value"))) is None:
-                continue
-
-            if daily_history.get(day_value) == value:
-                continue
-
-            daily_history[day_value] = value
-            changed = earliest_changed.get(sensor_type)
-            earliest_changed[sensor_type] = min(changed, reading_day) if changed else reading_day
+        if (changed_from := _merge_aggregate_history(history, aggregate)) is not None:
+            earliest_changed[sensor_type] = changed_from
 
     return merged, earliest_changed
 
