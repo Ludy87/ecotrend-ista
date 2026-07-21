@@ -1,6 +1,7 @@
 {
     "domain": "ecotrend_ista",
     "name": "ista EcoTrend",
+    "after_dependencies": ["recorder"],
     "codeowners": [
         "@Ludy87"
     ],
@@ -16,5 +17,5 @@
         "pyotp==2.9.0",
         "marshmallow-enum==1.5.1"
     ],
-    "version": "v3.4.0"
+    "version": "v3.5.0"
 }

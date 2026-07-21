@@ -1,0 +1,92 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Integrace již byla nakonfigurována",
+      "single_instance_allowed": "Integrace je již nakonfigurována. Je povolena pouze jedna konfigurace."
+    },
+    "create_entry": {
+      "default": "Integrace ista EcoTrend byla vytvořena."
+    },
+    "error": {
+      "auth_inval": "Přihlášení se nezdařilo. E-mail, uživatelské jméno, heslo nebo přihlašovací URL nejsou správné.",
+      "cannot_connect": "Připojení se nezdařilo",
+      "no_email": "Zadejte platný e-mail nebo uživatelské jméno",
+      "not_allowed": "Vybraná URL není podporována",
+      "timeout_connect": "Při navazování spojení vypršel časový limit",
+      "unknown": "Došlo k neočekávané chybě"
+    },
+    "step": {
+      "german": {
+        "data": {
+          "URL": "Přihlašovací URL",
+          "email": "E-mail nebo uživatelské jméno",
+          "mfa_code": "Kód dvoufázového ověření",
+          "password": "Heslo",
+          "update_interval": "Interval aktualizace (h)"
+        },
+        "description": "Přihlášení k účtu",
+        "title": "Nastavit ista EcoTrend"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "czech_heating_meter": {
+        "name": "Stav měřidla topení – {detail}",
+        "unit_of_measurement": "jednotek"
+      },
+      "czech_heating_meter_native_unit": {
+        "name": "Stav měřidla topení – {detail}"
+      },
+      "czech_warm_water_meter": {
+        "name": "Stav měřidla teplé vody – {detail}"
+      },
+      "czech_cold_water_meter": {
+        "name": "Stav měřidla studené vody – {detail}"
+      },
+      "czech_heating_daily": {
+        "name": "Vytápění – poslední den",
+        "unit_of_measurement": "jednotek"
+      },
+      "czech_heating_daily_native_unit": {
+        "name": "Vytápění – poslední den"
+      },
+      "czech_heating_monthly": {
+        "name": "Měsíční spotřeba vytápění",
+        "unit_of_measurement": "jednotek"
+      },
+      "czech_heating_monthly_native_unit": {
+        "name": "Měsíční spotřeba vytápění"
+      },
+      "czech_warm_water_daily": {
+        "name": "Teplá voda – poslední den"
+      },
+      "czech_warm_water_monthly": {
+        "name": "Měsíční spotřeba teplé vody"
+      },
+      "czech_cold_water_daily": {
+        "name": "Studená voda – poslední den"
+      },
+      "czech_cold_water_monthly": {
+        "name": "Měsíční spotřeba studené vody"
+      },
+      "czech_data_through": {
+        "name": "Data dostupná do"
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "not_allowed": "Vybraná URL není podporována"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "URL": "Přihlašovací URL",
+          "update_interval": "Interval aktualizace (h)"
+        },
+        "title": "Nastavení ista EcoTrend"
+      }
+    }
+  }
+}

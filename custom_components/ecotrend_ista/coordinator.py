@@ -9,16 +9,16 @@ import logging
 import os
 from typing import Any
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from pyecotrend_ista.helper_object_de import CustomRaw
 from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
 import requests
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
 from .config_flow import login_account
-from .const import CONF_UPDATE_INTERVAL, DOMAIN
+from .const import CONF_UPDATE_INTERVAL, CONF_URL, DOMAIN
+from .czech_statistics import async_sync_czech_statistics
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +54,7 @@ class IstaDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize ista EcoTrend Version 3 data updater."""
         self._entry = entry
+        self.czech_data: dict[str, Any] | None = None
         super().__init__(
             hass=hass,
             logger=_LOGGER,
@@ -68,7 +69,8 @@ class IstaDataUpdateCoordinator(DataUpdateCoordinator):
         This method initializes the PyEcotrendIsta controller instance with the provided email, password,
         and other necessary configurations.
         """
-        data = self._entry.data
+        data = dict(self._entry.data)
+        data[CONF_URL] = self._entry.options.get(CONF_URL, "de_url")
         self.controller = login_account(
             self.hass,
             data,
@@ -85,7 +87,25 @@ class IstaDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             if self.data is None:
                 self.data = {}
-            await self.init()
+            is_czech = self._entry.options.get(CONF_URL, "de_url") == "cz_url"
+            reuse_initial_login = (
+                is_czech
+                and self.czech_data is None
+                and hasattr(self, "controller")
+                and self.controller.access_token is not None
+            )
+            if not reuse_initial_login:
+                await self.init()
+
+            if is_czech:
+                self.czech_data = await self.hass.async_add_executor_job(self.controller.get_home_assistant_data)
+                await async_sync_czech_statistics(
+                    self.hass,
+                    self.controller.get_support_code(),
+                    self.czech_data.get("aggregates", {}),
+                )
+                return self.czech_data
+
             for uuid in self.controller.get_uuids():
                 _consum_raw: dict[str, Any] = await self.hass.async_add_executor_job(
                     self.controller.consum_raw,
@@ -109,5 +129,5 @@ class IstaDataUpdateCoordinator(DataUpdateCoordinator):
                 self.data[uuid] = consum_raw
             self.async_set_updated_data(self.data)
             return self.data
-        except requests.Timeout:
-            pass
+        except requests.Timeout as error:
+            raise UpdateFailed("Timeout while communicating with ista EcoTrend") from error

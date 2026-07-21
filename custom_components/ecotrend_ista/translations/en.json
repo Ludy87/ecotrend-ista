@@ -8,10 +8,10 @@
       "default": "ista EcoTrend integration has been created!"
     },
     "error": {
-      "auth_inval": "Login failed. Incorrect email address, password, or login URL.",
+      "auth_inval": "Login failed. Incorrect email address or username, password, or login URL.",
       "cannot_connect": "Connection failed",
-      "no_email": "Email Invalid",
-      "not_allowed": "The selected URL is not yet supported",
+      "no_email": "Enter a valid email address or username",
+      "not_allowed": "The selected URL is not supported",
       "timeout_connect": "Timeout establishing connection",
       "unknown": "Unexpected error"
     },
@@ -19,25 +19,71 @@
       "german": {
         "data": {
           "URL": "Login URL",
-          "email": "Email address",
+          "email": "Email address or username",
           "mfa_code": "Two-factor authentication",
           "password": "Password",
-          "update_interval": "Update Interval (h)"
+          "update_interval": "Update interval (h)"
         },
         "description": "Account authentication",
         "title": "Set up ista EcoTrend"
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "czech_heating_meter": {
+        "name": "Heating meter reading – {detail}",
+        "unit_of_measurement": "units"
+      },
+      "czech_heating_meter_native_unit": {
+        "name": "Heating meter reading – {detail}"
+      },
+      "czech_warm_water_meter": {
+        "name": "Hot water meter reading – {detail}"
+      },
+      "czech_cold_water_meter": {
+        "name": "Cold water meter reading – {detail}"
+      },
+      "czech_heating_daily": {
+        "name": "Heating – latest day",
+        "unit_of_measurement": "units"
+      },
+      "czech_heating_daily_native_unit": {
+        "name": "Heating – latest day"
+      },
+      "czech_heating_monthly": {
+        "name": "Monthly heating consumption",
+        "unit_of_measurement": "units"
+      },
+      "czech_heating_monthly_native_unit": {
+        "name": "Monthly heating consumption"
+      },
+      "czech_warm_water_daily": {
+        "name": "Hot water – latest day"
+      },
+      "czech_warm_water_monthly": {
+        "name": "Monthly hot water consumption"
+      },
+      "czech_cold_water_daily": {
+        "name": "Cold water – latest day"
+      },
+      "czech_cold_water_monthly": {
+        "name": "Monthly cold water consumption"
+      },
+      "czech_data_through": {
+        "name": "Data available through"
+      }
+    }
+  },
   "options": {
     "error": {
-      "not_allowed": "The selected URL is not yet supported"
+      "not_allowed": "The selected URL is not supported"
     },
     "step": {
       "init": {
         "data": {
           "URL": "Login URL",
-          "update_interval": "Update Interval (h)"
+          "update_interval": "Update interval (h)"
         },
         "title": "Settings for ista EcoTrend"
       }
